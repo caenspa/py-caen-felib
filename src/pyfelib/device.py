@@ -42,7 +42,7 @@ class Device:
 	def set_user_register(self, addr, value):
 		res = _lib.CAEN_FELib_SetUserRegister(self.h, ctypes.c_uint32(addr), ctypes.c_uint32(value))
 		if res != 0:
-			raise Exception(_ast_error())
+			raise Exception(last_error())
 
 	def send_command(self, path):
 		res = _lib.CAEN_FELib_SendCommand(self.h, path.encode('ascii'))
