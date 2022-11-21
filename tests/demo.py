@@ -9,3 +9,5 @@ dig.set_value("/par/recordlengths", "100")
 
 val = dig.get_value("/par/recordlengths")
 print(val)
+
+del dig
