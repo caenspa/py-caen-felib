@@ -52,7 +52,7 @@ for i in range(10000000):
 
 	dig.set_value('/par/recordlengths', f'{reclen}')
 
-	waveform = [np.empty(reclen, dtype=np.uint16) for i in range(nch)]
+	#waveform = [np.empty(reclen, dtype=np.uint16) for i in range(nch)]
 	waveform = np.empty([nch, reclen], dtype=np.uint16)
 	waveform_arg = wrap_matrix_v2(waveform)
 
