@@ -1,6 +1,8 @@
 import ctypes
 from sys import platform
 
+from pyfelib.error import FELibError
+
 class Lib:
 
 	def __init__(self):
@@ -28,38 +30,48 @@ class Lib:
 		lib = loader.LoadLibrary(lib_name)
 		lib_variadic = loader_variadic.LoadLibrary(lib_name)
 
+		# Load API of function not related to devices
+		self.__GetLibInfo = lib.CAEN_FELib_GetLibInfo
+		self.__GetLibVersion = lib.CAEN_FELib_GetLibVersion
+		self.__GetErrorName = lib.CAEN_FELib_GetErrorName
+		self.__GetErrorDescription = lib.CAEN_FELib_GetErrorDescription
+		self.__GetLastError = lib.CAEN_FELib_GetLastError
+		self.__DevicesDiscovery = lib.CAEN_FELib_DevicesDiscovery
+
 		# Load API
-		self._get_last_error = lib.CAEN_FELib_GetLastError
-		self._get_lib_version = lib.CAEN_FELib_GetLibVersion
-		self._open = lib.CAEN_FELib_Open
-		self._close = lib.CAEN_FELib_Close
-		self._get_handle = lib.CAEN_FELib_GetHandle
-		self._get_child_handles = lib.CAEN_FELib_GetChildHandles
-		self._get_node_properties = lib.CAEN_FELib_GetNodeProperties
-		self._get_value = lib.CAEN_FELib_GetValue
-		self._set_value = lib.CAEN_FELib_SetValue
-		self._get_user_register = lib.CAEN_FELib_GetUserRegister
-		self._set_user_register = lib.CAEN_FELib_SetUserRegister
-		self._send_command = lib.CAEN_FELib_SendCommand
-		self._set_data_format = lib.CAEN_FELib_SetReadDataFormat
+		self.Open = lib.CAEN_FELib_Open
+		self.Close = lib.CAEN_FELib_Close
+		self.GetDeviceTree = lib.CAEN_FELib_GetDeviceTree
+		self.GetChildHandles = lib.CAEN_FELib_GetChildHandles
+		self.GetParentHandle = lib.CAEN_FELib_GetParentHandle
+		self.GetHandle = lib.CAEN_FELib_GetHandle
+		self.GetPath = lib.CAEN_FELib_GetPath
+		self.GetNodeProperties = lib.CAEN_FELib_GetNodeProperties
+		self.GetValue = lib.CAEN_FELib_GetValue
+		self.SetValue = lib.CAEN_FELib_SetValue
+		self.GetUserRegister = lib.CAEN_FELib_GetUserRegister
+		self.SetUserRegister = lib.CAEN_FELib_SetUserRegister
+		self.SendCommand = lib.CAEN_FELib_SendCommand
+		self.SetReadDataFormat = lib.CAEN_FELib_SetReadDataFormat
+		self.HasData = lib.CAEN_FELib_HasData
 
 		# Load variadic API
 		# Remember to manually apply default argument promotions
 		# when calling variadic functions!
-		self._read_data = lib_variadic.CAEN_FELib_ReadData
-
-	def get_last_error(self):
-		value = ctypes.create_string_buffer(1024)
-		ret = self._get_last_error(value)
-		if ret != 0:
-			raise Exception('print_last_error failed')
-		return value.value.decode()
+		self.ReadData = lib_variadic.CAEN_FELib_ReadData
 
 	def get_lib_version(self):
 		value = ctypes.create_string_buffer(16)
-		ret = self.get_lib_version(value)
+		ret = self.__GetLibVersion(value)
 		if ret != 0:
-			raise Exception('print_last_error failed')
+			raise FELibError(self.get_last_error(), res)
 		return value.value.decode()
+
+	def get_last_error(self):
+		value = ctypes.create_string_buffer(1024)
+		ret = self.__GetLastError(value)
+		if ret != 0:
+			raise FELibError('get_last_error failed', res)
+		return value.value.decode('ascii')
 
 _lib = Lib()

@@ -28,6 +28,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\pyfelib\device.py" />
+    <Compile Include="src\pyfelib\error.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="src\pyfelib\__init__.py" />
     <Compile Include="tests\demo.py" />
   </ItemGroup>
