@@ -5,7 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyfelib import lib, device, FELibError
+from pyfelib import lib, device, error
 
 # Utilities
 def wrap_array_v0(data):

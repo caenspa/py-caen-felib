@@ -60,25 +60,31 @@ class Device:
 		return name.value.decode(), type.value
 
 	def get_value(self, path):
+		'''Wrapper to CAEN_FELib_GetValue'''
 		value = ct.create_string_buffer(256)
 		lib.GetValue(self.__h, path.encode(), value)
 		return value.value.decode()
 
 	def get_value_with_arg(self, path, arg):
+		'''Wrapper to CAEN_FELib_GetValue'''
 		value = ct.create_string_buffer(arg.encode(), 256)
 		lib.GetValue(self.__h, path.encode(), value)
 		return value.value.decode()
 
 	def set_value(self, path, value):
+		'''Wrapper to CAEN_FELib_setValue'''
 		lib.SetValue(self.__h, path.encode(), value.encode())
 
 	def get_user_register(self, addr):
+		'''Wrapper to CAEN_FELib_GetUserRegister'''
 		value = ct.c_uint32()
 		lib.GetUserRegister(self.__h, addr, value)
 		return value.value
 
 	def set_user_register(self, addr, value):
+		'''Wrapper to CAEN_FELib_SetUserRegister'''
 		lib.SetUserRegister(self.__h, addr, value)
 
 	def send_command(self, path):
+		'''Wrapper to CAEN_FELib_SendCommand'''
 		lib.SendCommand(self.__h, path.encode())

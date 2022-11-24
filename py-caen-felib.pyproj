@@ -31,6 +31,9 @@
     <Compile Include="src\pyfelib\error.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="src\pyfelib\lib.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="src\pyfelib\__init__.py" />
     <Compile Include="tests\demo.py" />
   </ItemGroup>
