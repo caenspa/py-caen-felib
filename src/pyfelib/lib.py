@@ -2,7 +2,7 @@ import ctypes as ct
 from ctypes.util import find_library
 from sys import platform
 
-from pyfeself.__lib.error import FELibError
+from pyfelib.error import FELibError
 
 class Lib:
 
@@ -136,4 +136,3 @@ class Lib:
 		value = ct.create_string_buffer(1024)
 		self.__GetLastError(value)
 		return value.value.decode()
-
