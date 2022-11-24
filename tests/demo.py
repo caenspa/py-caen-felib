@@ -49,6 +49,7 @@ dig.set_value('/par/TestPulseWidth', '16')
 dig.set_value('/par/AcqTriggerSource', 'SwTrg|TestPulse')
 dig.set_value('/ch/7/par/chenable', 'false')
 
+val = dig.get_value_with_arg('/par/registeracq', '0x0')
 
 ep_scope = dig.endpoints['scope']
 

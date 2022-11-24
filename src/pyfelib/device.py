@@ -9,28 +9,14 @@ class Endpoint:
 		self.__h = handle
 
 	def set_read_data_format(self, json_string):
-		res = lib.SetReadDataFormat(self.__h, json_string.encode('ascii'))
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
-
-	@staticmethod
-	def __decode_read_data_error(res):
-		if res == -11:
-			raise FELibError('timeout', res)
-		elif res == -12:
-			raise FELibError('stop', res)
-		else:
-			raise FELibError(lib.get_last_error(), res)
+		lib.SetReadDataFormat(self.__h, json_string.encode())
+		# TODO: set lib.ReadData.argtypes, required on Apple ARM64
 
 	def read_data(self, timeout, *args):
-		res = lib.ReadData(self.__h, ctypes.c_int(timeout), *args)
-		if res != 0:
-			self.__decode_error()
+		 lib.ReadData(self.__h, ctypes.c_int(timeout), *args)
 
 	def has_data(self, timeout):
-		res = lib.HasData(self.__h, ctypes.c_int(timeout))
-		if res != 0:
-			self.__decode_error()
+		lib.HasData(self.__h, ctypes.c_int(timeout))
 
 
 class Device:
@@ -40,67 +26,58 @@ class Device:
 		self.endpoints = dict(self.__endpoints())
 
 	def __del__(self):
-		res = lib.Close(self.__h)
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
+		lib.Close(self.__h)
 
 	@staticmethod
 	def __connect(url):
 		handle = ctypes.c_uint64()
-		res = lib.Open(url.encode('ascii'), handle)
-		if res not in [0, 14]:
-			raise FELibError(lib.get_last_error(), res)
+		lib.Open(url.encode(), handle)
 		return handle
 
 	def __endpoints(self):
-		for h in self.__get_child_handles('/endpoint'):
-			name = ctypes.create_string_buffer(32)
-			type = ctypes.c_int()
-			res = lib.GetNodeProperties(h, None, name, type)
-			if res != 0:
-				raise FELibError(lib.get_last_error(), res)
-			if type.value == 4:
-				yield name.value.decode('ascii'), Endpoint(h)
+		for h in self.__get_child_handles(self.__h, '/endpoint'):
+			name, type = self.__get_node_properties(h, '/')
+			if type == 4:
+				yield name, Endpoint(h)
 
-	def __get_child_handles(self, path):
-		b_path = path.encode('ascii')
-		res = lib.GetChildHandles(self.__h, b_path, None, 0)
-		if res < 0:
-			raise FELibError(lib.get_last_error(), res)
+	@staticmethod
+	def __get_child_handles(handle, path):
+		b_path = path.encode()
+		res = lib.GetChildHandles(handle, b_path, None, 0)
 		n_child_handles = res
 		child_handles = (ctypes.c_uint64 * n_child_handles)()
-		res = lib.GetChildHandles(self.__h, b_path, child_handles, n_child_handles)
-		if res < 0:
-			raise FELibError(lib.get_last_error(), res)
-		elif res != n_child_handles:
+		res = lib.GetChildHandles(handle, b_path, child_handles, n_child_handles)
+		if res != n_child_handles:
 			raise RuntimeError('unexpected size')
 		return [ctypes.c_uint64(h) for h in child_handles]
 
+	@staticmethod
+	def __get_node_properties(handle, path):
+		name = ctypes.create_string_buffer(32)
+		type = ctypes.c_int()
+		lib.GetNodeProperties(handle, path.encode(), name, type)
+		return name.value.decode(), type.value
+
 	def get_value(self, path):
 		value = ctypes.create_string_buffer(256)
-		res = lib.GetValue(self.__h, path.encode('ascii'), value)
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
-		return value.value.decode('ascii')
+		lib.GetValue(self.__h, path.encode(), value)
+		return value.value.decode()
+
+	def get_value_with_arg(self, path, arg):
+		value = ctypes.create_string_buffer(arg.encode(), 256)
+		lib.GetValue(self.__h, path.encode(), value)
+		return value.value.decode()
 
 	def set_value(self, path, value):
-		res = lib.SetValue(self.__h, path.encode('ascii'), value.encode('ascii'))
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
+		lib.SetValue(self.__h, path.encode(), value.encode())
 
 	def get_user_register(self, addr):
 		value = ctypes.c_uint32()
-		res = lib.GetUserRegister(self.__h, addr, value)
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
+		lib.GetUserRegister(self.__h, addr, value)
 		return value.value
 
 	def set_user_register(self, addr, value):
-		res = lib.SetUserRegister(self.__h, addr, value)
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
+		lib.SetUserRegister(self.__h, addr, value)
 
 	def send_command(self, path):
-		res = lib.SendCommand(self.__h, path.encode('ascii'))
-		if res != 0:
-			raise FELibError(lib.get_last_error(), res)
+		lib.SendCommand(self.__h, path.encode())
