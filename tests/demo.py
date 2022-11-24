@@ -31,6 +31,7 @@ def wrap_matrix_v2(data):
 	waveform_ptr = np.fromiter(ptr_gen, dtype=np.uintp)
 	return waveform_ptr.ctypes.data_as(ctypes.c_void_p)
 
+print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
 dig = device.Device('dig2://10.105.250.7')
