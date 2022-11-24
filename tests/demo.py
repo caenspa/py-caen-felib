@@ -1,29 +1,13 @@
 import ctypes
+import json
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyfelib import device
+from pyfelib import lib, device, FELibError
 
-dig = device.Device('dig2://10.105.250.7')
-
-nch_str = dig.get_value('/par/numch')
-nch = int(nch_str)
-
-dig.send_command('/cmd/reset')
-
-dig.set_value('/endpoint/par/activeendpoint', 'scope')
-dig.set_value('/par/TestPulsePeriod', '1000000')
-dig.set_value('/par/TestPulseWidth', '16')
-dig.set_value('/par/AcqTriggerSource', 'SwTrg|TestPulse')
-
-ep_scope = dig.endpoints['scope']
-ep_scope.set_read_data_format('[{"name":"EVENT_SIZE","type":"SIZE_T"},{"name":"TIMESTAMP","type":"U64"},{"name":"WAVEFORM","type":"U16","dim":2},{"name":"WAVEFORM_SIZE","type":"U64","dim":1}]')
-
-plt.ion()
-figure, ax = plt.subplots(figsize=(10, 8))
-line1, = ax.plot([], [])
-ax.set_ylim(8000, 8200)
-
+# Utilities
 def wrap_array_v0(data):
 	type = np.ctypeslib.as_ctypes_type(data.dtype)
 	return data.ctypes.data_as(ctypes.POINTER(type))
@@ -47,12 +31,63 @@ def wrap_matrix_v2(data):
 	waveform_ptr = np.fromiter(ptr_gen, dtype=np.uintp)
 	return waveform_ptr.ctypes.data_as(ctypes.c_void_p)
 
-for i in range(10000000):
+
+# Connect
+dig = device.Device('dig2://10.105.250.7')
+
+# Get board info
+nch_str = dig.get_value('/par/numch')
+nch = int(nch_str)
+
+# Reset
+dig.send_command('/cmd/reset')
+
+# Configure digitizer
+dig.set_value('/endpoint/par/activeendpoint', 'scope')
+dig.set_value('/par/TestPulsePeriod', '1000000')
+dig.set_value('/par/TestPulseWidth', '16')
+dig.set_value('/par/AcqTriggerSource', 'SwTrg|TestPulse')
+dig.set_value('/ch/7/par/chenable', 'false')
+
+
+ep_scope = dig.endpoints['scope']
+
+data_format = [
+	{
+		'name': 'EVENT_SIZE',
+		'type': 'SIZE_T',
+	},
+	{
+		'name': 'TIMESTAMP',
+		'type': 'U64',
+	},
+	{
+		'name': 'WAVEFORM',
+		'type': 'U16',
+		'dim': 2,
+	},
+	{
+		'name': 'WAVEFORM_SIZE',
+		'type': 'U64',
+		'dim': 1,
+	},
+]
+
+ep_scope.set_read_data_format(json.dumps(data_format))
+
+# Configure plot
+plt.ion()
+figure, ax = plt.subplots(figsize=(10, 8))
+line0, = ax.plot([], [])
+line1, = ax.plot([], [])
+line2, = ax.plot([], [])
+ax.set_ylim(8000, 8200)
+
+for i in range(500000):
 	reclen = 4 + i * 4
 
 	dig.set_value('/par/recordlengths', f'{reclen}')
 
-	#waveform = [np.empty(reclen, dtype=np.uint16) for i in range(nch)]
 	waveform = np.empty([nch, reclen], dtype=np.uint16)
 	waveform_arg = wrap_matrix_v2(waveform)
 
@@ -70,7 +105,9 @@ for i in range(10000000):
 
 	ep_scope.read_data(-1, event_size_arg, timestamp_arg, waveform_arg, waveform_size_arg)
 
-	line1.set_data(range(waveform_size[0]), waveform[0])
+	line0.set_data(range(waveform_size[0]), waveform[0])
+	line1.set_data(range(waveform_size[1]), waveform[1])
+	line2.set_data(range(waveform_size[2]), waveform[2])
 
 	ax.relim()
 	ax.autoscale_view(True, True, False)
