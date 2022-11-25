@@ -1,3 +1,7 @@
+__author__		= 'Giovanni Cerretani'
+__copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
+__license__		= 'LGPLv3+'
+
 class FELibError(RuntimeError):
 	def __init__(self, message, error):
 		super().__init__(message)

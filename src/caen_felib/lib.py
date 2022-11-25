@@ -1,3 +1,7 @@
+__author__		= 'Giovanni Cerretani'
+__copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
+__license__		= 'LGPLv3+'
+
 import ctypes as ct
 from ctypes.util import find_library
 from sys import platform
