@@ -46,21 +46,23 @@ nch = int(device_tree['par']['numch']['value'])
 dig.send_command('/cmd/reset')
 
 # Configure digitizer
-dig.set_value('/endpoint/par/activeendpoint', 'scope')
+reclen = 4000
+
 dig.set_value('/par/TestPulsePeriod', '1000000000')
 dig.set_value('/par/TestPulseWidth', '16')
-dig.set_value('/par/AcqTriggerSource', 'ITLA')
-dig.set_value('/ch/7/par/ChEnable', 'False')
+dig.set_value('/par/AcqTriggerSource', 'ITLA|TestPulse')
+dig.set_value('/par/RecordLengthS', f'{reclen}')
+dig.set_value('/par/PreTriggerS', '1000')
+
 dig.set_value('/ch/0/par/ITLConnect', 'ITLA')
 dig.set_value('/ch/0/par/DCOffset', '50')
-dig.set_value('/ch/0/par/TriggerThr', '8000')
+dig.set_value('/ch/0/par/TriggerThr', '9000')
 dig.set_value('/ch/0/par/TriggerThrMode', 'Absolute')
 dig.set_value('/ch/0/par/SelfTriggerEdge', 'Fall')
 
-reclen = 100000
-dig.set_value('/par/RecordLengthS', f'{reclen}')
-dig.set_value('/par/PreTriggerS', '5')
+dig.set_value('/ch/1/par/DCOffset', '20')
 
+dig.set_value('/endpoint/par/activeendpoint', 'scope')
 ep_scope = dig.endpoints['scope']
 
 data_format = [
@@ -90,8 +92,10 @@ ep_scope.set_read_data_format(data_format)
 plt.ion()
 figure, ax = plt.subplots(figsize=(10, 8))
 line0, = ax.plot([], [])
+line1, = ax.plot([], [])
 ax.set_ylim(0, 2 ** 14 - 1)
 
+# Initialize data
 waveform = np.empty([nch, reclen], dtype=np.uint16)
 waveform_arg = wrap_matrix_v2(waveform)
 
@@ -104,6 +108,7 @@ event_size_arg = ctypes.byref(event_size)
 timestamp = ctypes.c_uint64()
 timestamp_arg = ctypes.byref(timestamp)
 
+# Start acquisition
 dig.send_command('/cmd/armacquisition')
 dig.send_command('/cmd/swstartacquisition')
 
@@ -113,10 +118,13 @@ while True:
 		ep_scope.read_data(-1, event_size_arg, timestamp_arg, waveform_arg, waveform_size_arg)
 	except error.FELibTimeout as ex:
 		print('timeout')
+		continue
 	except error.FELibStop as ex:
 		print('stop')
+		break
 
 	line0.set_data(range(waveform_size[0]), waveform[0])
+	line1.set_data(range(waveform_size[1]), waveform[1])
 
 	ax.relim()
 	ax.autoscale_view(True, True, False)

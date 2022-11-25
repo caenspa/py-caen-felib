@@ -41,15 +41,14 @@ class Device:
 				yield name, Endpoint(h)
 
 	@staticmethod
-	def __get_child_handles(handle, path):
+	def __get_child_handles(handle, path, initial_size = 2 ** 6):
 		b_path = None if path is None else path.encode()
-		res = lib.GetChildHandles(handle, b_path, None, 0)
-		n_child_handles = res
-		child_handles = (ct.c_uint64 * n_child_handles)()
-		res = lib.GetChildHandles(handle, b_path, child_handles, n_child_handles)
-		if res != n_child_handles:
-			raise RuntimeError('unexpected size')
-		return [ct.c_uint64(h) for h in child_handles]
+		while True:
+			child_handles = (ct.c_uint64 * initial_size)()
+			res = lib.GetChildHandles(handle, b_path, child_handles, initial_size)
+			if res <= initial_size:
+				return [ct.c_uint64(h) for h in child_handles[:res]]
+			initial_size = res
 
 	@staticmethod
 	def __get_node_properties(handle, path):
@@ -62,13 +61,11 @@ class Device:
 	def get_device_tree(self, initial_size = 2 ** 22):
 		'''Wrapper to CAEN_FELib_GetDeviceTree'''
 		while True:
-			device_tree_size = initial_size
-			device_tree = ct.create_string_buffer(device_tree_size)
-			res = lib.GetDeviceTree(self.__h, device_tree, device_tree_size)
-			if res < device_tree_size:
+			device_tree = ct.create_string_buffer(initial_size)
+			res = lib.GetDeviceTree(self.__h, device_tree, initial_size)
+			if res < initial_size: # equal not fine for null terminator
 				return json.loads(device_tree.value.decode())
-			else:
-				device_tree_size = res
+			initial_size = res
 
 	def get_value(self, path):
 		'''Wrapper to CAEN_FELib_GetValue'''
