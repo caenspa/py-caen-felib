@@ -2,7 +2,7 @@ import ctypes as ct
 from ctypes.util import find_library
 from sys import platform
 
-from pyfelib.error import FELibError
+import caen_felib.error as error
 
 class Lib:
 
@@ -105,7 +105,12 @@ class Lib:
 
 	def __api_errcheck(self, res, func, args):
 		if res < 0:
-			raise FELibError(self.get_last_error(), res)
+			if res == -11:
+				raise error.FELibTimeout(res)
+			elif res == -12:
+				raise error.FELibStop(res)
+			else:
+				raise error.FELibError(self.get_last_error(), res)
 		return res
 
 	def __set_type(self, func, argtypes):

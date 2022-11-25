@@ -1,22 +1,22 @@
 import ctypes as ct
+import json
 
-from pyfelib import lib
-from pyfelib.error import FELibError
+from caen_felib import lib
 
 class Endpoint:
 
 	def __init__(self, handle):
 		self.__h = handle
 
-	def set_read_data_format(self, json_string):
-		lib.SetReadDataFormat(self.__h, json_string.encode())
+	def set_read_data_format(self, format):
+		lib.SetReadDataFormat(self.__h, json.dumps(format).encode())
 		# TODO: set lib.ReadData.argtypes, required on Apple ARM64
 
 	def read_data(self, timeout, *args):
-		lib.ReadData(self.__h, ct.c_int(timeout), *args)
+		lib.ReadData(self.__h, timeout, *args)
 
 	def has_data(self, timeout):
-		lib.HasData(self.__h, ct.c_int(timeout))
+		lib.HasData(self.__h, timeout)
 
 
 class Device:
@@ -58,6 +58,17 @@ class Device:
 		type = ct.c_int()
 		lib.GetNodeProperties(handle, b_path, name, type)
 		return name.value.decode(), type.value
+
+	def get_device_tree(self, initial_size = 2 ** 22):
+		'''Wrapper to CAEN_FELib_GetDeviceTree'''
+		while True:
+			device_tree_size = initial_size
+			device_tree = ct.create_string_buffer(device_tree_size)
+			res = lib.GetDeviceTree(self.__h, device_tree, device_tree_size)
+			if res < device_tree_size:
+				return json.loads(device_tree.value.decode())
+			else:
+				device_tree_size = res
 
 	def get_value(self, path):
 		'''Wrapper to CAEN_FELib_GetValue'''

@@ -5,7 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyfelib import lib, device, error
+from caen_felib import lib, device, error
 
 # Utilities
 def wrap_array_v0(data):
@@ -36,21 +36,30 @@ print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 # Connect
 dig = device.Device('dig2://10.105.250.7')
 
+# Get device tree
+device_tree = dig.get_device_tree()
+
 # Get board info
-nch_str = dig.get_value('/par/numch')
-nch = int(nch_str)
+nch = int(device_tree['par']['numch']['value'])
 
 # Reset
 dig.send_command('/cmd/reset')
 
 # Configure digitizer
 dig.set_value('/endpoint/par/activeendpoint', 'scope')
-dig.set_value('/par/TestPulsePeriod', '1000000')
+dig.set_value('/par/TestPulsePeriod', '1000000000')
 dig.set_value('/par/TestPulseWidth', '16')
-dig.set_value('/par/AcqTriggerSource', 'SwTrg|TestPulse')
-dig.set_value('/ch/7/par/chenable', 'false')
+dig.set_value('/par/AcqTriggerSource', 'ITLA')
+dig.set_value('/ch/7/par/ChEnable', 'False')
+dig.set_value('/ch/0/par/ITLConnect', 'ITLA')
+dig.set_value('/ch/0/par/DCOffset', '50')
+dig.set_value('/ch/0/par/TriggerThr', '8000')
+dig.set_value('/ch/0/par/TriggerThrMode', 'Absolute')
+dig.set_value('/ch/0/par/SelfTriggerEdge', 'Fall')
 
-val = dig.get_value_with_arg('/par/registeracq', '0x0')
+reclen = 100000
+dig.set_value('/par/RecordLengthS', f'{reclen}')
+dig.set_value('/par/PreTriggerS', '5')
 
 ep_scope = dig.endpoints['scope']
 
@@ -75,45 +84,43 @@ data_format = [
 	},
 ]
 
-ep_scope.set_read_data_format(json.dumps(data_format))
+ep_scope.set_read_data_format(data_format)
 
 # Configure plot
 plt.ion()
 figure, ax = plt.subplots(figsize=(10, 8))
 line0, = ax.plot([], [])
-line1, = ax.plot([], [])
-line2, = ax.plot([], [])
-ax.set_ylim(8000, 8200)
+ax.set_ylim(0, 2 ** 14 - 1)
 
-for i in range(500000):
-	reclen = 4 + i * 4
+waveform = np.empty([nch, reclen], dtype=np.uint16)
+waveform_arg = wrap_matrix_v2(waveform)
 
-	dig.set_value('/par/recordlengths', f'{reclen}')
+waveform_size = np.empty(nch, dtype=np.uint64)
+waveform_size_arg = wrap_array_v1(waveform_size)
 
-	waveform = np.empty([nch, reclen], dtype=np.uint16)
-	waveform_arg = wrap_matrix_v2(waveform)
+event_size = ctypes.c_size_t()
+event_size_arg = ctypes.byref(event_size)
 
-	waveform_size = np.empty(nch, dtype=np.uint64)
-	waveform_size_arg = wrap_array_v1(waveform_size)
+timestamp = ctypes.c_uint64()
+timestamp_arg = ctypes.byref(timestamp)
 
-	event_size = ctypes.c_size_t()
-	event_size_arg = ctypes.byref(event_size)
+dig.send_command('/cmd/armacquisition')
+dig.send_command('/cmd/swstartacquisition')
 
-	timestamp = ctypes.c_uint64()
-	timestamp_arg = ctypes.byref(timestamp)
+while True:
 
-	dig.send_command('/cmd/armacquisition')
-	dig.send_command('/cmd/swstartacquisition')
-
-	ep_scope.read_data(-1, event_size_arg, timestamp_arg, waveform_arg, waveform_size_arg)
+	try:
+		ep_scope.read_data(-1, event_size_arg, timestamp_arg, waveform_arg, waveform_size_arg)
+	except error.FELibTimeout as ex:
+		print('timeout')
+	except error.FELibStop as ex:
+		print('stop')
 
 	line0.set_data(range(waveform_size[0]), waveform[0])
-	line1.set_data(range(waveform_size[1]), waveform[1])
-	line2.set_data(range(waveform_size[2]), waveform[2])
 
 	ax.relim()
 	ax.autoscale_view(True, True, False)
 	figure.canvas.draw()
 	figure.canvas.flush_events()
 
-	dig.send_command('/cmd/disarmacquisition')
+dig.send_command('/cmd/disarmacquisition')

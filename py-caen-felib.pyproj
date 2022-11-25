@@ -23,18 +23,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\" />
-    <Folder Include="src\pyfelib\" />
+    <Folder Include="src\caen_felib\" />
     <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\pyfelib\device.py" />
-    <Compile Include="src\pyfelib\error.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="src\pyfelib\lib.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="src\pyfelib\__init__.py" />
+    <Compile Include="src\caen_felib\device.py" />
+    <Compile Include="src\caen_felib\error.py" />
+    <Compile Include="src\caen_felib\lib.py" />
+    <Compile Include="src\caen_felib\__init__.py" />
     <Compile Include="tests\demo.py" />
   </ItemGroup>
   <ItemGroup>

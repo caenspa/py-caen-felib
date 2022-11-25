@@ -1,4 +1,4 @@
-from pyfelib.lib import Lib
+from caen_felib.lib import Lib
 
 # Initialize library
 lib = Lib()
