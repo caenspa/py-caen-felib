@@ -10,7 +10,9 @@ from caen_felib import lib, device, error
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
-dig = device.Device('dig2://10.105.250.7')
+dig = device.device('dig2://10.105.250.7')
+for n in dig:
+	print(n.name)
 
 # Get device tree
 device_tree = dig.get_device_tree()
@@ -19,7 +21,7 @@ device_tree = dig.get_device_tree()
 nch = int(device_tree['par']['numch']['value'])
 
 # Reset
-dig.send_command('/cmd/reset')
+dig.cmd.reset()
 
 # Configure digitizer
 reclen = 102400
@@ -41,7 +43,7 @@ for i in range(nch):
 	dig.set_value(f'/ch/{i}/par/WaveDataSource', 'adc_data')
 
 dig.set_value('/endpoint/par/activeendpoint', 'scope')
-ep_scope = dig.endpoints['scope']
+ep_scope = dig.get_node('/endpoint/scope')
 
 data_format = [
 	{
