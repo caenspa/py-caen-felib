@@ -1,4 +1,4 @@
-import ctypes
+import ctypes as ct
 import json
 import sys
 
@@ -6,30 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from caen_felib import lib, device, error
-
-# Utilities
-def wrap_array_v0(data):
-	type = np.ctypeslib.as_ctypes_type(data.dtype)
-	return data.ctypes.data_as(ctypes.POINTER(type))
-
-def wrap_array_v1(data):
-	return data.ctypes.data_as(ctypes.c_void_p)
-
-def wrap_matrix_v0(data):
-	type = np.ctypeslib.as_ctypes_type(data.dtype)
-	data_ptr = [i.ctypes.data_as(ctypes.POINTER(type)) for i in data]
-	return (ctypes.POINTER(type) * len(data_ptr))(*data_ptr)
-
-def wrap_matrix_v1(data):
-	type = np.ctypeslib.as_ctypes_type(data.dtype)
-	ptr_gen = (i.ctypes.data_as(ctypes.POINTER(type)) for i in data)
-	size = data.shape[0]
-	return (ctypes.POINTER(type) * size)(*ptr_gen)
-
-def wrap_matrix_v2(data):
-	ptr_gen = (i.ctypes.data for i in data)
-	waveform_ptr = np.fromiter(ptr_gen, dtype=np.uintp)
-	return waveform_ptr.ctypes.data_as(ctypes.c_void_p)
 
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
@@ -46,23 +22,23 @@ nch = int(device_tree['par']['numch']['value'])
 dig.send_command('/cmd/reset')
 
 # Configure digitizer
-reclen = 1024
+reclen = 10240
 
-dig.set_value('/par/TestPulsePeriod', '1000000000')
+dig.set_value('/par/TestPulsePeriod', '1000')
 dig.set_value('/par/TestPulseWidth', '16')
-dig.set_value('/par/AcqTriggerSource', 'ITLA')
+dig.set_value('/par/AcqTriggerSource', 'TestPulse')
 dig.set_value('/par/RecordLengthS', f'{reclen}')
 dig.set_value('/par/PreTriggerS', '128')
 
 dig.set_value('/ch/0/par/SamplesOverThreshold', '64')
 dig.set_value('/ch/0/par/ITLConnect', 'ITLA')
-dig.set_value('/ch/0/par/DCOffset', '70')
-dig.set_value('/ch/0/par/TriggerThr', '11500')
+dig.set_value('/ch/0/par/TriggerThr', '200')
 dig.set_value('/ch/0/par/TriggerThrMode', 'Absolute')
 dig.set_value('/ch/0/par/SelfTriggerEdge', 'Fall')
 
-for i in range(1, 32):
+for i in range(nch):
 	dig.set_value(f'/ch/{i}/par/DCOffset', f'{20 + i}')
+	dig.set_value(f'/ch/{i}/par/WaveDataSource', 'Ramp')
 
 dig.set_value('/endpoint/par/activeendpoint', 'scope')
 ep_scope = dig.endpoints['scope']
@@ -80,11 +56,13 @@ data_format = [
 		'name': 'WAVEFORM',
 		'type': 'U16',
 		'dim': 2,
+		'shape': [nch, reclen],
 	},
 	{
 		'name': 'WAVEFORM_SIZE',
 		'type': 'U64',
 		'dim': 1,
+		'shape': [nch],
 	},
 ]
 
@@ -94,23 +72,16 @@ ep_scope.set_read_data_format(data_format)
 plt.ion()
 figure, ax = plt.subplots(figsize=(10, 8))
 lines = []
-for i in range(nch):
+for i in range(4):
 	line, = ax.plot([], [])
 	lines.append(line)
 ax.set_ylim(0, 2 ** 14 - 1)
 
 # Initialize data
-waveform = np.empty([nch, reclen], dtype=np.uint16)
-waveform_arg = wrap_matrix_v2(waveform)
-
-waveform_size = np.empty(nch, dtype=np.uint64)
-waveform_size_arg = wrap_array_v1(waveform_size)
-
-event_size = ctypes.c_size_t()
-event_size_arg = ctypes.byref(event_size)
-
-timestamp = ctypes.c_uint64()
-timestamp_arg = ctypes.byref(timestamp)
+event_size = ep_scope.data[0].value
+timestamp = ep_scope.data[1].value
+waveform = ep_scope.data[2].value
+waveform_size = ep_scope.data[3].value
 
 # Start acquisition
 dig.send_command('/cmd/armacquisition')
@@ -119,15 +90,15 @@ dig.send_command('/cmd/swstartacquisition')
 while True:
 
 	try:
-		ep_scope.read_data(-1, event_size_arg, timestamp_arg, waveform_arg, waveform_size_arg)
-	except error.FELibTimeout as ex:
+		ep_scope.read_data(-1)
+	except error.Timeout as ex:
 		print('timeout')
 		continue
-	except error.FELibStop as ex:
+	except error.Stop as ex:
 		print('stop')
 		break
 
-	for i in range(nch):
+	for i in range(4):
 		lines[i].set_data(range(waveform_size[i]), waveform[i])
 
 	ax.relim()
