@@ -99,10 +99,11 @@ class Lib:
 		# Load variadic API
 		# Notes:
 		# - remember to manually apply default argument promotions when calling variadic functions!
-		# - argtypes is not set; anyway, according to ct documentation, there could be problems
-		#   on ARM64 for Apple Platforms.
+		# - argtypes is set to fixed values to avoid to be called with improper arguments; it
+		#     is set automatically by Endpoint.set_read_data_format. This is mandatory because,
+		#     according to ct documentation, there could be problems on ARM64 for Apple Platforms.
 		self.ReadData = self.__lib_variadic.CAEN_FELib_ReadData
-		self.__set(self.ReadData, None)
+		self.__set(self.ReadData, [ct.c_uint64, ct.c_int])
 
 		# Initialize local variables
 		self.version = self.get_lib_version()

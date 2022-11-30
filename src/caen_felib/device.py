@@ -22,7 +22,7 @@ class Data:
 		self.shape = field.get('shape', [])
 
 		if (self.dim != len(self.shape)):
-			raise RuntimeError('unexpected shape length')
+			raise RuntimeError('shape length must match dim')
 
 		# Private fields
 		self.__underlying_type = self.__generate_underlying_type()

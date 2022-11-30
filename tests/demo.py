@@ -22,23 +22,23 @@ nch = int(device_tree['par']['numch']['value'])
 dig.send_command('/cmd/reset')
 
 # Configure digitizer
-reclen = 10240
+reclen = 102400
 
-dig.set_value('/par/TestPulsePeriod', '1000')
+dig.set_value('/par/TestPulsePeriod', '1000000')
 dig.set_value('/par/TestPulseWidth', '16')
-dig.set_value('/par/AcqTriggerSource', 'TestPulse')
+dig.set_value('/par/AcqTriggerSource', 'TestPulse|ITLA')
 dig.set_value('/par/RecordLengthS', f'{reclen}')
 dig.set_value('/par/PreTriggerS', '128')
 
-dig.set_value('/ch/0/par/SamplesOverThreshold', '64')
+dig.set_value('/ch/0/par/SamplesOverThreshold', '16')
 dig.set_value('/ch/0/par/ITLConnect', 'ITLA')
-dig.set_value('/ch/0/par/TriggerThr', '200')
+dig.set_value('/ch/0/par/TriggerThr', '8000')
 dig.set_value('/ch/0/par/TriggerThrMode', 'Absolute')
 dig.set_value('/ch/0/par/SelfTriggerEdge', 'Fall')
 
 for i in range(nch):
-	dig.set_value(f'/ch/{i}/par/DCOffset', f'{20 + i}')
-	dig.set_value(f'/ch/{i}/par/WaveDataSource', 'Ramp')
+	dig.set_value(f'/ch/{i}/par/DCOffset', f'{50 + i}')
+	dig.set_value(f'/ch/{i}/par/WaveDataSource', 'adc_data')
 
 dig.set_value('/endpoint/par/activeendpoint', 'scope')
 ep_scope = dig.endpoints['scope']
@@ -75,6 +75,7 @@ lines = []
 for i in range(4):
 	line, = ax.plot([], [])
 	lines.append(line)
+ax.set_xlim(0, reclen - 1)
 ax.set_ylim(0, 2 ** 14 - 1)
 
 # Initialize data
@@ -99,10 +100,10 @@ while True:
 		break
 
 	for i in range(4):
-		lines[i].set_data(range(waveform_size[i]), waveform[i])
+		lines[i].set_data(np.arange(0, waveform_size[i]), waveform[i])
 
-	ax.relim()
-	ax.autoscale_view(True, True, False)
+	ax.title.set_text(f'Timestamp: {timestamp}')
+
 	figure.canvas.draw()
 	figure.canvas.flush_events()
 
