@@ -119,7 +119,7 @@ class _Lib:
 	def __api_errcheck(self, res, func, args):
 		# res can be positive on GetChildHandles and GetDeviceTree
 		if res < 0:
-			raise error.error(self.last_error, res)
+			raise error.Error(self.last_error, res)
 		return res
 
 	def __set(self, func, argtypes):
