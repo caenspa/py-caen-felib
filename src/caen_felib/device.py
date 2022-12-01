@@ -14,7 +14,7 @@ import numpy as np
 
 from caen_felib import lib
 
-class data:
+class _data:
 
 	def __init__(self, field):
 
@@ -195,7 +195,7 @@ class node:
 		lib.SetReadDataFormat(self.handle, json.dumps(format).encode())
 
 		# Allocate requested fields
-		self.data = [data(field) for field in format]
+		self.data = [_data(field) for field in format]
 
 		# Important:
 		# Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
