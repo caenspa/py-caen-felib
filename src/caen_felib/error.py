@@ -1,6 +1,6 @@
-'''
+"""
 @ingroup Python
-'''
+"""
 
 __author__		= 'Giovanni Cerretani'
 __copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
@@ -9,7 +9,7 @@ __license__		= 'LGPLv3+'
 from enum import Enum
 
 class ErrorCode(Enum):
-	'''Wrapper to ::CAEN_FELib_ErrorCode'''
+	"""Wrapper to ::CAEN_FELib_ErrorCode"""
 	Success						= 0
 	GenericError				= -1
 	InvalidParam				= -2

@@ -1,9 +1,9 @@
-'''
+"""
 @defgroup Python Python
 @brief Python wrapper of the CAEN FELib
 
 @pre This module requires CAEN FELib libraries to be installed in the system.
-'''
+"""
 
 __author__		= 'Giovanni Cerretani'
 __copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
