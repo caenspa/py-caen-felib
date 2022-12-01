@@ -127,25 +127,25 @@ class _lib:
 		func.errcheck = self.__api_errcheck
 
 	def get_lib_version(self):
-		'''Wrapper to CAEN_FELib_GetLibVersion'''
+		'''!Wrapper to CAEN_FELib_GetLibVersion()'''
 		value = ct.create_string_buffer(16)
 		self.__GetLibVersion(value)
 		return value.value.decode()
 
 	def get_error_name(self, error):
-		'''Wrapper to CAEN_FELib_GetErrorName'''
+		'''!Wrapper to CAEN_FELib_GetErrorName()'''
 		value = ct.create_string_buffer(32)
 		_self.__GetErrorName(error, value)
 		return value.value.decode()
 
 	def get_error_description(self, error):
-		'''Wrapper to CAEN_FELib_GetErrorDescription'''
+		'''!Wrapper to CAEN_FELib_GetErrorDescription()'''
 		value = ct.create_string_buffer(256)
 		_self.__GetErrorDescription(error, value)
 		return value.value.decode()
 
 	def get_last_error(self):
-		'''Wrapper to CAEN_FELib_GetLastError'''
+		'''!Wrapper to CAEN_FELib_GetLastError()'''
 		value = ct.create_string_buffer(1024)
 		self.__GetLastError(value)
 		return value.value.decode()

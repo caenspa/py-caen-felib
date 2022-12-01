@@ -5,7 +5,7 @@ __license__		= 'LGPLv3+'
 from enum import Enum
 
 class error_code(Enum):
-	'''Wrapper to CAEN_FELib_ErrorCode'''
+	'''!Wrapper to ::CAEN_FELib_ErrorCode'''
 	Success						= 0
 	GenericError				= -1
 	InvalidParam				= -2

@@ -11,9 +11,6 @@ print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
 dig = device.device('dig2://10.105.250.7')
-for n in dig.ch[7].par:
-	if n.type == device.node_type.PARAMETER:
-		print(n.name, n.datatype.value)
 
 # Get board info
 nch = int(dig.par.numch.value)
@@ -87,7 +84,6 @@ waveform_size = ep_scope.data[3].value
 # Start acquisition
 dig.send_command('/cmd/armacquisition')
 dig.send_command('/cmd/swstartacquisition')
-dig.send_command('/cmd/swstopacquisition')
 
 while True:
 
