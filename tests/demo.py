@@ -11,14 +11,12 @@ print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
 dig = device.device('dig2://10.105.250.7')
-for n in dig:
-	print(n.name)
-
-# Get device tree
-device_tree = dig.get_device_tree()
+for n in dig.ch[7].par:
+	if n.type == device.node_type.PARAMETER:
+		print(n.name, n.datatype.value)
 
 # Get board info
-nch = int(device_tree['par']['numch']['value'])
+nch = int(dig.par.numch.value)
 
 # Reset
 dig.cmd.reset()
@@ -26,7 +24,7 @@ dig.cmd.reset()
 # Configure digitizer
 reclen = 102400
 
-dig.set_value('/par/TestPulsePeriod', '1000000')
+dig.set_value('/par/TestPulsePeriod', '1000')
 dig.set_value('/par/TestPulseWidth', '16')
 dig.set_value('/par/AcqTriggerSource', 'TestPulse|ITLA')
 dig.set_value('/par/RecordLengthS', f'{reclen}')
@@ -89,17 +87,21 @@ waveform_size = ep_scope.data[3].value
 # Start acquisition
 dig.send_command('/cmd/armacquisition')
 dig.send_command('/cmd/swstartacquisition')
+dig.send_command('/cmd/swstopacquisition')
 
 while True:
 
 	try:
 		ep_scope.read_data(-1)
-	except error.Timeout as ex:
-		print('timeout')
-		continue
-	except error.Stop as ex:
-		print('stop')
-		break
+	except error.error as ex:
+		if ex.code == error.error_code.Timeout:
+			print('timeout')
+			continue
+		elif ex.code == error.error_code.Stop:
+			print('stop')
+			break
+		else:
+			raise ex
 
 	for i in range(4):
 		lines[i].set_data(np.arange(0, waveform_size[i]), waveform[i])

@@ -3,12 +3,12 @@ __copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
 __license__		= 'LGPLv3+'
 
 import ctypes as ct
-from ctypes.util import find_library
+import ctypes.util as ctutil
 from sys import platform
 
 import caen_felib.error as error
 
-class Lib:
+class _lib:
 
 	def __init__(self):
 
@@ -25,7 +25,7 @@ class Lib:
 			loader_variadic = ct.cdll
 
 		# Locate library path
-		lib_path = find_library('CAEN_FELib')
+		lib_path = ctutil.find_library('CAEN_FELib')
 
 		# Load library
 		self.__lib = loader.LoadLibrary(lib_path)
@@ -98,10 +98,17 @@ class Lib:
 
 		# Load variadic API
 		# Notes:
-		# - remember to manually apply default argument promotions when calling variadic functions!
-		# - argtypes is set to fixed values to avoid to be called with improper arguments; it
-		#     is set automatically by Endpoint.set_read_data_format. This is mandatory because,
-		#     according to ct documentation, there could be problems on ARM64 for Apple Platforms.
+		# - Remember to manually apply default argument promotions when calling variadic functions;
+		#     anyway it is not necessary with ReadData since variadic arguments are always pointers,
+		#     that are not subject to default argument promotion. For more detail, see
+		#     https://en.cppreference.com/w/c/language/conversion#Default_argument_promotions
+		# - On some platforms, like Apple ARM64, "it is required to specify the argtypes attribute for
+		#     the regular, non-variadic, function arguments" (see ctypes documentation); the other
+		#     variadic arguments could be set at runtime after a call to SetReadDataFormat, but this
+		#     would not be safe because ReadData can be called concurrently from multiple threads with
+		#     different signatures, so arguments (always pointers in this case) must be placed without
+		#     relying on ctypes automatic conversions with from_param methods. For more details, see
+		#     https://stackoverflow.com/q/74630617/3287591
 		self.ReadData = self.__lib_variadic.CAEN_FELib_ReadData
 		self.__set(self.ReadData, [ct.c_uint64, ct.c_int])
 
@@ -109,13 +116,9 @@ class Lib:
 		self.version = self.get_lib_version()
 
 	def __api_errcheck(self, res, func, args):
+		# res can be positive on GetChildHandles and GetDeviceTree
 		if res < 0:
-			if res == -11:
-				raise error.Timeout(res)
-			elif res == -12:
-				raise error.Stop(res)
-			else:
-				raise error.Error(self.get_last_error(), res)
+			raise error.error(self.get_last_error(), res)
 		return res
 
 	def __set(self, func, argtypes):

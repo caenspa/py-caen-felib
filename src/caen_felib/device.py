@@ -3,6 +3,7 @@ __copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
 __license__		= 'LGPLv3+'
 
 import ctypes as ct
+from enum import Enum
 import json
 
 import numpy as np
@@ -13,7 +14,7 @@ class data:
 
 	def __init__(self, field):
 
-		# Default fields passed to C library
+		# Default attributes from fields passed to C library
 		self.name = field['name']
 		self.type = field['type']
 		self.dim = field.get('dim', 0)
@@ -24,11 +25,11 @@ class data:
 		if (self.dim != len(self.shape)):
 			raise RuntimeError('shape length must match dim')
 
-		# Private fields
+		# Private attributes
 		self.__underlying_type = self.__generate_underlying_type()
 		self.__2d_proxy_value = None
 
-		# Public fields
+		# Other public attributes
 		self.argtype = self.__generate_argtype()
 		self.value = self.__generate_value()
 		self.arg = self.__generate_arg()
@@ -75,12 +76,31 @@ class data:
 			self.__2d_proxy_value = np.fromiter(ptr_gen, dtype=ct.c_void_p)
 			return self.__2d_proxy_value.ctypes.data_as(self.argtype)
 
+class node_type(Enum):
+	'''Wrapper to CAEN_FELib_NodeType_t'''
+	UNKNOWN		= -1
+	PARAMETER	= 0
+	COMMAND		= 1
+	FEATURE		= 2
+	ATTRIBUTE	= 3
+	ENDPOINT	= 4
+	CHANNEL		= 5
+	DIGITIZER	= 6
+	FOLDER		= 7
+	LVDS		= 8
+	VGA			= 9
+	HV_CHANNEL	= 10
+	MONOUT		= 11
+	VTRACE		= 12
+	GROUP		= 13
 
 class node:
 
 	def __init__(self, handle):
-		self._h = handle
-		# endpoint data
+		# Public attributes
+		self.handle = handle
+
+		# Endpoint data (inizialized by set_read_data_format)
 		self.data = None
 
 	@staticmethod
@@ -97,41 +117,41 @@ class node:
 		while True:
 			child_handles = np.empty([initial_size], dtype=ct.c_uint64)
 			child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
-			res = lib.GetChildHandles(self._h, b_path, child_handles_arg, initial_size)
+			res = lib.GetChildHandles(self.handle, b_path, child_handles_arg, initial_size)
 			if res <= initial_size:
-				return [node(h) for h in child_handles[:res]]
+				return [node(handle) for handle in child_handles[:res]]
 			initial_size = res
 
 	def get_parent_node(self, path):
 		'''Wrapper to CAEN_FELib_GetParendHandle'''
 		value = ct.c_uint64()
-		lib.GetParentHandle(self._h, self._convert_path(path), value)
+		lib.GetParentHandle(self.handle, self._convert_path(path), value)
 		return node(value)
 
 	def get_node(self, path):
 		'''Wrapper to CAEN_FELib_GetHandle'''
 		value = ct.c_uint64()
-		lib.GetHandle(self._h, self._convert_path(path), value)
+		lib.GetHandle(self.handle, self._convert_path(path), value)
 		return node(value)
 
 	def get_path(self):
 		'''Wrapper to CAEN_FELib_GetPath'''
 		value = ct.create_string_buffer(256)
-		lib.GetPath(self._h, value)
+		lib.GetPath(self.handle, value)
 		return value.value.decode()
 
 	def get_node_properties(self, path):
 		'''Wrapper to CAEN_FELib_GetNodeProperties'''
 		name = ct.create_string_buffer(32)
 		type = ct.c_int()
-		lib.GetNodeProperties(self._h, self._convert_path(path), name, type)
-		return name.value.decode(), type.value
+		lib.GetNodeProperties(self.handle, self._convert_path(path), name, type)
+		return name.value.decode(), node_type(type.value)
 
 	def get_device_tree(self, initial_size = 2 ** 22):
 		'''Wrapper to CAEN_FELib_GetDeviceTree'''
 		while True:
 			device_tree = ct.create_string_buffer(initial_size)
-			res = lib.GetDeviceTree(self._h, device_tree, initial_size)
+			res = lib.GetDeviceTree(self.handle, device_tree, initial_size)
 			if res < initial_size: # equal not fine, see docs
 				return json.loads(device_tree.value.decode())
 			initial_size = res
@@ -139,76 +159,96 @@ class node:
 	def get_value(self, path):
 		'''Wrapper to CAEN_FELib_GetValue'''
 		value = ct.create_string_buffer(256)
-		lib.GetValue(self._h, self._convert_path(path), value)
+		lib.GetValue(self.handle, self._convert_path(path), value)
 		return value.value.decode()
 
 	def get_value_with_arg(self, path, arg):
 		'''Wrapper to CAEN_FELib_GetValue'''
 		value = ct.create_string_buffer(self._convert_path(arg), 256)
-		lib.GetValue(self._h, self._convert_path(path), value)
+		lib.GetValue(self.handle, self._convert_path(path), value)
 		return value.value.decode()
 
 	def set_value(self, path, value):
-		'''Wrapper to CAEN_FELib_setValue'''
-		lib.SetValue(self._h, self._convert_path(path), self._convert_path(value))
+		'''Wrapper to CAEN_FELib_SetValue'''
+		lib.SetValue(self.handle, self._convert_path(path), self._convert_path(value))
 
 	def get_user_register(self, addr):
 		'''Wrapper to CAEN_FELib_GetUserRegister'''
 		value = ct.c_uint32()
-		lib.GetUserRegister(self._h, addr, value)
+		lib.GetUserRegister(self.handle, addr, value)
 		return value.value
 
 	def set_user_register(self, addr, value):
 		'''Wrapper to CAEN_FELib_SetUserRegister'''
-		lib.SetUserRegister(self._h, addr, value)
+		lib.SetUserRegister(self.handle, addr, value)
 
 	def send_command(self, path):
 		'''Wrapper to CAEN_FELib_SendCommand'''
-		lib.SendCommand(self._h, self._convert_path(path))
+		lib.SendCommand(self.handle, self._convert_path(path))
 
 	def set_read_data_format(self, format):
 		'''Wrapper to CAEN_FELib_SetReadDataFormat'''
-		lib.SetReadDataFormat(self._h, json.dumps(format).encode())
+		lib.SetReadDataFormat(self.handle, json.dumps(format).encode())
 
 		# Allocate requested fields
-		self.data = [data(f) for f in format]
+		self.data = [data(field) for field in format]
 
-		# Set lib.ReadData.argtypes (mandatory on Apple ARM64)
-		lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
+		# Important:
+		# Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
+		# is shared with all other endpoints and it would not be thread safe.
+		# More details on a comment on the caen_felib.lib constructor.
+		# Possible unsafe code could be:
+		# lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
 
 	def read_data(self, timeout):
 		'''Wrapper to CAEN_FELib_ReadData'''
-		lib.ReadData(self._h, timeout, *[d.arg for d in self.data])
+		lib.ReadData(self.handle, timeout, *[d.arg for d in self.data])
 
 	def has_data(self, timeout):
 		'''Wrapper to CAEN_FELib_HasData'''
-		lib.HasData(self._h, timeout)
+		lib.HasData(self.handle, timeout)
 
 	###################
 	# Python utilities
 	###################
-
-	def __getattr__(self, name):
-		return self.get_node(f'/{name}')
-
-	def __getitem__(self, id):
-		return self.get_node(f'/{id}')
-
-	def __iter__(self):
-		for n in self.get_child_nodes(None):
-			yield n
 
 	@property
 	def name(self):
 		return self.get_node_properties(None)[0]
 
 	@property
+	def type(self):
+		return self.get_node_properties(None)[1]
+
+	@property
+	def path(self):
+		return self.get_path()
+
+	@property
+	def parent_node(self):
+		return self.get_parent_node(None)
+
+	@property
+	def child_nodes(self):
+		return self.get_child_nodes(None)
+
+	@property
 	def value(self):
+		'''Get the current value'''
 		return self.get_value(None)
 
 	@value.setter
 	def value(self, value):
 		return self.set_value(None, value)
+
+	def __getitem__(self, id):
+		return self.get_node(f'/{id}')
+
+	def __getattr__(self, name):
+		return self.__getitem__(name)
+
+	def __iter__(self):
+		yield from self.child_nodes
 
 	def __call__(self):
 		self.send_command(None)
@@ -221,7 +261,7 @@ class device(node):
 
 	def __del__(self):
 		'''Wrapper to CAEN_FELib_Close'''
-		lib.Close(self._h)
+		lib.Close(self.handle)
 
 	@staticmethod
 	def __open(url):

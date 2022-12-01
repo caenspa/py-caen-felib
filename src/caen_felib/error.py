@@ -2,15 +2,29 @@ __author__		= 'Giovanni Cerretani'
 __copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
 __license__		= 'LGPLv3+'
 
-class Error(RuntimeError):
-	def __init__(self, message, error):
+from enum import Enum
+
+class error_code(Enum):
+	'''Wrapper to CAEN_FELib_ErrorCode'''
+	Success						= 0
+	GenericError				= -1
+	InvalidParam				= -2
+	DeviceAlreadyOpen			= -3
+	DeviceNotFound				= -4
+	MaxDevicesError				= -5
+	CommandError				= -6
+	InternalError				= -7
+	NotImplemented				= -8
+	InvalidHandle				= -9
+	DeviceLibraryNotAvailable	= -10
+	Timeout						= -11
+	Stop						= -12
+	Disabled					= -13
+	BadLibraryVersion			= -14
+	CommunicationError			= -15
+
+class error(RuntimeError):
+
+	def __init__(self, message, res):
 		super().__init__(message)
-		self.error = error
-
-class Timeout(Error):
-	def __init__(self, error):
-		super().__init__('timeout', error)
-
-class Stop(Error):
-	def __init__(self, error):
-		super().__init__('stop', error)
+		self.code = error_code(res)
