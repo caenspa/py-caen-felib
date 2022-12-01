@@ -1,12 +1,8 @@
 '''
-CAEN FELib
-==========
+@defgroup Python Python
+@brief Python wrapper of the CAEN FELib
 
-Requirements
-------------
-This module requires CAEN FELib libraries to be installed
-in the system.
-
+@pre This module requires CAEN FELib libraries to be installed in the system.
 '''
 
 __author__		= 'Giovanni Cerretani'
