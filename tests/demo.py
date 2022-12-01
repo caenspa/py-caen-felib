@@ -12,6 +12,8 @@ print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 # Connect
 dig = device.Digitizer('dig2://10.105.250.7')
 
+x = dig.get_device_tree()
+
 # Get board info
 nch = int(dig.par.numch.value)
 

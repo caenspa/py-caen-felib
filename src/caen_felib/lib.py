@@ -129,20 +129,40 @@ class _Lib:
 
 	# C API wrappers
 
+	def get_lib_info(self, initial_size = 2 ** 22):
+		'''Wrapper to CAEN_FELib_GetLibInfo()
+		@param[in] initial_size		inizial size to allocate for the first iteration
+		@return						JSON representation of the library info (a dictionary)
+		'''
+		while True:
+			lib_info = ct.create_string_buffer(initial_size)
+			res = lib.__GetLibInfo(lib_info, initial_size)
+			if res < initial_size: # equal not fine, see docs
+				return json.loads(lib_info.value.decode())
+			initial_size = res
+
 	def get_lib_version(self):
-		'''Wrapper to CAEN_FELib_GetLibVersion()'''
+		'''Wrapper to CAEN_FELib_GetLibVersion()
+		@return						version
+		'''
 		value = ct.create_string_buffer(16)
 		self.__GetLibVersion(value)
 		return value.value.decode()
 
 	def get_error_name(self, error):
-		'''Wrapper to CAEN_FELib_GetErrorName()'''
+		'''Wrapper to CAEN_FELib_GetErrorName()
+		@param[in] error			error code returned by library functions
+		@return						error name
+		'''
 		value = ct.create_string_buffer(32)
 		_self.__GetErrorName(error, value)
 		return value.value.decode()
 
 	def get_error_description(self, error):
-		'''Wrapper to CAEN_FELib_GetErrorDescription()'''
+		'''Wrapper to CAEN_FELib_GetErrorDescription()
+		@param[in] error			error code returned by library functions
+		@return						error description
+		'''
 		value = ct.create_string_buffer(256)
 		_self.__GetErrorDescription(error, value)
 		return value.value.decode()
