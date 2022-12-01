@@ -11,7 +11,7 @@ __license__		= 'LGPLv3+'
 __version__		= '0.0'
 __contact__		= 'https://www.caen.it/'
 
-from caen_felib.lib import _lib
+from caen_felib.lib import _Lib
 
 # Initialize library
-lib = _lib()
+lib = _Lib()

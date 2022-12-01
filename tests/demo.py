@@ -10,7 +10,7 @@ from caen_felib import lib, device, error
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
-dig = device.device('dig2://10.105.250.7')
+dig = device.Digitizer('dig2://10.105.250.7')
 
 # Get board info
 nch = int(dig.par.numch.value)
@@ -90,10 +90,10 @@ while True:
 	try:
 		ep_scope.read_data(-1)
 	except error.error as ex:
-		if ex.code == error.error_code.Timeout:
+		if ex.code == error.ErrorCode.Timeout:
 			print('timeout')
 			continue
-		elif ex.code == error.error_code.Stop:
+		elif ex.code == error.ErrorCode.Stop:
 			print('stop')
 			break
 		else:

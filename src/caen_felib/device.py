@@ -14,7 +14,7 @@ import numpy as np
 
 from caen_felib import lib
 
-class _data:
+class _Data:
 
 	def __init__(self, field):
 
@@ -81,7 +81,7 @@ class _data:
 			return self.__2d_proxy_value.ctypes.data_as(self.argtype)
 
 
-class node_type(Enum):
+class NodeType(Enum):
 	'''Wrapper to ::CAEN_FELib_NodeType_t'''
 	UNKNOWN		= -1
 	PARAMETER	= 0
@@ -100,7 +100,11 @@ class node_type(Enum):
 	GROUP		= 13
 
 
-class node:
+def _convert_str(path):
+	return None if path is None else path.encode()
+
+
+class Node:
 
 	def __init__(self, handle):
 		# Public attributes
@@ -109,34 +113,30 @@ class node:
 		# Endpoint data (inizialized by set_read_data_format)
 		self.data = None
 
-	@staticmethod
-	def _convert_path(path):
-		return None if path is None else path.encode()
-
 	# C API wrappers
 
 	def get_child_nodes(self, path, initial_size = 2 ** 6):
 		'''Wrapper to CAEN_FELib_GetChildHandles()'''
-		b_path = self._convert_path(path)
+		b_path = _convert_str(path)
 		while True:
 			child_handles = np.empty([initial_size], dtype=ct.c_uint64)
 			child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
 			res = lib.GetChildHandles(self.handle, b_path, child_handles_arg, initial_size)
 			if res <= initial_size:
-				return [node(handle) for handle in child_handles[:res]]
+				return [Node(handle) for handle in child_handles[:res]]
 			initial_size = res
 
 	def get_parent_node(self, path):
 		'''Wrapper to CAEN_FELib_GetParentHandle()'''
 		value = ct.c_uint64()
-		lib.GetParentHandle(self.handle, self._convert_path(path), value)
-		return node(value)
+		lib.GetParentHandle(self.handle, _convert_str(path), value)
+		return Node(value)
 
 	def get_node(self, path):
 		'''Wrapper to CAEN_FELib_GetHandle()'''
 		value = ct.c_uint64()
-		lib.GetHandle(self.handle, self._convert_path(path), value)
-		return node(value)
+		lib.GetHandle(self.handle, _convert_str(path), value)
+		return Node(value)
 
 	def get_path(self):
 		'''Wrapper to CAEN_FELib_GetPath()'''
@@ -148,8 +148,8 @@ class node:
 		'''Wrapper to CAEN_FELib_GetNodeProperties()'''
 		name = ct.create_string_buffer(32)
 		type = ct.c_int()
-		lib.GetNodeProperties(self.handle, self._convert_path(path), name, type)
-		return name.value.decode(), node_type(type.value)
+		lib.GetNodeProperties(self.handle, _convert_str(path), name, type)
+		return name.value.decode(), NodeType(type.value)
 
 	def get_device_tree(self, initial_size = 2 ** 22):
 		'''Wrapper to CAEN_FELib_GetDeviceTree()'''
@@ -163,18 +163,18 @@ class node:
 	def get_value(self, path):
 		'''Wrapper to CAEN_FELib_GetValue()'''
 		value = ct.create_string_buffer(256)
-		lib.GetValue(self.handle, self._convert_path(path), value)
+		lib.GetValue(self.handle, _convert_str(path), value)
 		return value.value.decode()
 
 	def get_value_with_arg(self, path, arg):
 		'''Wrapper to CAEN_FELib_GetValue()'''
-		value = ct.create_string_buffer(self._convert_path(arg), 256)
-		lib.GetValue(self.handle, self._convert_path(path), value)
+		value = ct.create_string_buffer(_convert_str(arg), 256)
+		lib.GetValue(self.handle, _convert_str(path), value)
 		return value.value.decode()
 
 	def set_value(self, path, value):
 		'''Wrapper to CAEN_FELib_SetValue()'''
-		lib.SetValue(self.handle, self._convert_path(path), self._convert_path(value))
+		lib.SetValue(self.handle, _convert_str(path), _convert_str(value))
 
 	def get_user_register(self, addr):
 		'''Wrapper to CAEN_FELib_GetUserRegister()'''
@@ -188,14 +188,14 @@ class node:
 
 	def send_command(self, path):
 		'''Wrapper to CAEN_FELib_SendCommand()'''
-		lib.SendCommand(self.handle, self._convert_path(path))
+		lib.SendCommand(self.handle, _convert_str(path))
 
 	def set_read_data_format(self, format):
 		'''Wrapper to CAEN_FELib_SetReadDataFormat()'''
 		lib.SetReadDataFormat(self.handle, json.dumps(format).encode())
 
 		# Allocate requested fields
-		self.data = [_data(field) for field in format]
+		self.data = [_Data(field) for field in format]
 
 		# Important:
 		# Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
@@ -263,18 +263,18 @@ class node:
 		self.send_command(None)
 
 
-class device(node):
+class Digitizer(Node):
 
 	def __init__(self, url):
 		super().__init__(self.__open(url))
 
 	def __del__(self):
-		'''Wrapper to CAEN_FELib_Close'''
+		'''Wrapper to CAEN_FELib_Close()'''
 		lib.Close(self.handle)
 
 	@staticmethod
 	def __open(url):
-		'''Wrapper to CAEN_FELib_Open'''
+		'''Wrapper to CAEN_FELib_Open()'''
 		handle = ct.c_uint64()
-		lib.Open(device._convert_path(url), handle)
+		lib.Open(_convert_str(url), handle)
 		return handle

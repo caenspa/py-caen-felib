@@ -12,7 +12,7 @@ from sys import platform
 
 import caen_felib.error as error
 
-class _lib:
+class _Lib:
 
 	def __init__(self):
 

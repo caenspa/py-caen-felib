@@ -8,7 +8,7 @@ __license__		= 'LGPLv3+'
 
 from enum import Enum
 
-class error_code(Enum):
+class ErrorCode(Enum):
 	'''Wrapper to ::CAEN_FELib_ErrorCode'''
 	Success						= 0
 	GenericError				= -1
@@ -27,8 +27,8 @@ class error_code(Enum):
 	BadLibraryVersion			= -14
 	CommunicationError			= -15
 
-class error(RuntimeError):
+class Error(RuntimeError):
 
 	def __init__(self, message, res):
 		super().__init__(message)
-		self.code = error_code(res)
+		self.code = ErrorCode(res)
