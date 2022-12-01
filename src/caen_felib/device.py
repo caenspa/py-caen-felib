@@ -141,7 +141,7 @@ class node:
 		return value.value.decode()
 
 	def get_node_properties(self, path):
-		'''!Wrapper to CAEN_FELib_GetNodeProperties'''
+		'''!Wrapper to CAEN_FELib_GetNodeProperties()'''
 		name = ct.create_string_buffer(32)
 		type = ct.c_int()
 		lib.GetNodeProperties(self.handle, self._convert_path(path), name, type)
@@ -173,7 +173,7 @@ class node:
 		lib.SetValue(self.handle, self._convert_path(path), self._convert_path(value))
 
 	def get_user_register(self, addr):
-		'''!Wrapper to CAEN_FELib_GetUserRegiste()r'''
+		'''!Wrapper to CAEN_FELib_GetUserRegister()'''
 		value = ct.c_uint32()
 		lib.GetUserRegister(self.handle, addr, value)
 		return value.value
@@ -212,31 +212,37 @@ class node:
 
 	@property
 	def name(self):
+		'''!Get node name'''
 		return self.get_node_properties(None)[0]
 
 	@property
 	def type(self):
+		'''!Get node type'''
 		return self.get_node_properties(None)[1]
 
 	@property
 	def path(self):
+		'''!Get node path'''
 		return self.get_path()
 
 	@property
 	def parent_node(self):
+		'''!Get parent node'''
 		return self.get_parent_node(None)
 
 	@property
 	def child_nodes(self):
+		'''!Get list of child nodes'''
 		return self.get_child_nodes(None)
 
 	@property
 	def value(self):
-		'''Get the current value'''
+		'''!Get current value'''
 		return self.get_value(None)
 
 	@value.setter
 	def value(self, value):
+		'''!Set current value'''
 		return self.set_value(None, value)
 
 	def __getitem__(self, id):
@@ -249,6 +255,7 @@ class node:
 		yield from self.child_nodes
 
 	def __call__(self):
+		'''!Execute command'''
 		self.send_command(None)
 
 
