@@ -1,6 +1,6 @@
 """
 @defgroup Python Python
-@brief Python wrapper of the CAEN FELib
+@brief Python wrapper
 
 @pre This module requires CAEN FELib libraries to be installed in the system.
 """

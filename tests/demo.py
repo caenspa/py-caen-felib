@@ -15,10 +15,8 @@ dig = device.Digitizer('dig2://10.105.250.7')
 # Get board info
 nch = int(dig.par.numch.value)
 
-print(nch)
-
 # Reset
-dig.cmd.thermalshutdown()
+dig.cmd.reset()
 
 # Configure digitizer
 reclen = 102400
@@ -90,10 +88,9 @@ dig.send_command('/cmd/swstartacquisition')
 while True:
 
 	try:
-		ep_scope.read_data(-1)
-	except error.error as ex:
+		ep_scope.read_data(100)
+	except error.Error as ex:
 		if ex.code == error.ErrorCode.Timeout:
-			print('timeout')
 			continue
 		elif ex.code == error.ErrorCode.Stop:
 			print('stop')

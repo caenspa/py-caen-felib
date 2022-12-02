@@ -303,7 +303,9 @@ class Node:
 
 		Example:
 		```python
-		data_format = [
+		nch = dig.par.numch.value
+		reclen = dig.par.recordlengths.value
+		format = [
 			{
 				'name': 'WAVEFORM',
 				'type': 'U16',
@@ -450,7 +452,7 @@ class Digitizer(Node):
 	def __init__(self, url):
 		super().__init__(self.__open(url))
 
-		## Digitizer URL used for the connection
+		## URL used for the connection
 		self.url = url
 
 	def __del__(self):

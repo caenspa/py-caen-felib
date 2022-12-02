@@ -31,9 +31,8 @@ class ErrorCode(Enum):
 
 class Error(RuntimeError):
 	"""
-	Error type
-
-	It holds the C library error code.
+	Raised when a wrapped C API function returns
+	negative values.
 	"""
 	def __init__(self, message, res):
 		super().__init__(message)

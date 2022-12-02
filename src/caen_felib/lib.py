@@ -13,6 +13,11 @@ from sys import platform
 import caen_felib.error as error
 
 class _Lib:
+	"""
+	This class loads the CAEN_FELib shared library and
+	exposes its functions on its public attributes
+	using ctypes.
+	"""
 
 	def __init__(self):
 
@@ -28,12 +33,12 @@ class _Lib:
 			loader = ct.cdll
 			loader_variadic = ct.cdll
 
-		# Locate library path
-		lib_path = ctutil.find_library('CAEN_FELib')
+		## Library path on the filesystem
+		self.path = ctutil.find_library('CAEN_FELib')
 
 		# Load library
-		self.__lib = loader.LoadLibrary(lib_path)
-		self.__lib_variadic = loader_variadic.LoadLibrary(lib_path)
+		self.__lib = loader.LoadLibrary(self.path)
+		self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
 
 		# Load API not related to devices
 		self.__GetLibInfo = self.__lib.CAEN_FELib_GetLibInfo
