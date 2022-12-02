@@ -130,7 +130,8 @@ class _Lib:
 	# C API wrappers
 
 	def get_lib_info(self, initial_size = 2 ** 22):
-		"""Wrapper to CAEN_FELib_GetLibInfo()
+		"""
+		Wrapper to CAEN_FELib_GetLibInfo()
 		@param[in] initial_size		inizial size to allocate for the first iteration
 		@return						JSON representation of the library info (a dictionary)
 		"""
@@ -142,7 +143,8 @@ class _Lib:
 			initial_size = res
 
 	def get_lib_version(self):
-		"""Wrapper to CAEN_FELib_GetLibVersion()
+		"""
+		Wrapper to CAEN_FELib_GetLibVersion()
 		@return						version
 		"""
 		value = ct.create_string_buffer(16)
@@ -150,7 +152,8 @@ class _Lib:
 		return value.value.decode()
 
 	def get_error_name(self, error):
-		"""Wrapper to CAEN_FELib_GetErrorName()
+		"""
+		Wrapper to CAEN_FELib_GetErrorName()
 		@param[in] error			error code returned by library functions
 		@return						error name
 		"""
@@ -159,7 +162,8 @@ class _Lib:
 		return value.value.decode()
 
 	def get_error_description(self, error):
-		"""Wrapper to CAEN_FELib_GetErrorDescription()
+		"""
+		Wrapper to CAEN_FELib_GetErrorDescription()
 		@param[in] error			error code returned by library functions
 		@return						error description
 		"""
@@ -168,12 +172,18 @@ class _Lib:
 		return value.value.decode()
 
 	def get_last_error(self):
-		"""Wrapper to CAEN_FELib_GetLastError()"""
+		"""
+		Wrapper to CAEN_FELib_GetLastError()"""
 		value = ct.create_string_buffer(1024)
 		self.__GetLastError(value)
 		return value.value.decode()
 
 	# Python utilities
+
+	@property
+	def info(self):
+		"""Get library info"""
+		return self.get_lib_info()
 
 	@property
 	def version(self):

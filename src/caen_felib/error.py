@@ -9,7 +9,9 @@ __license__		= 'LGPLv3+'
 from enum import Enum
 
 class ErrorCode(Enum):
-	"""Wrapper to ::CAEN_FELib_ErrorCode"""
+	"""
+	Wrapper to ::CAEN_FELib_ErrorCode
+	"""
 	Success						= 0
 	GenericError				= -1
 	InvalidParam				= -2
@@ -28,7 +30,11 @@ class ErrorCode(Enum):
 	CommunicationError			= -15
 
 class Error(RuntimeError):
+	"""
+	Error type
 
+	It holds the code value according to ErrorCode.
+	"""
 	def __init__(self, message, res):
 		super().__init__(message)
 		self.code = ErrorCode(res)

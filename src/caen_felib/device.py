@@ -15,6 +15,11 @@ import numpy as np
 from caen_felib import lib
 
 class _Data:
+	"""
+	Class representing data set by Node.set_read_data_format().
+	It holds a numpy ndarray allocated with size specified
+	in the data format.
+	"""
 
 	def __init__(self, field):
 
@@ -82,7 +87,9 @@ class _Data:
 
 
 class NodeType(Enum):
-	"""Wrapper to ::CAEN_FELib_NodeType_t"""
+	"""
+	Wrapper to ::CAEN_FELib_NodeType_t
+	"""
 	UNKNOWN		= -1
 	PARAMETER	= 0
 	COMMAND		= 1
@@ -105,6 +112,16 @@ def _convert_str(path):
 
 
 class Node:
+	"""
+	Class representing a node. It holds an handle.
+
+	Example:
+	```python
+	dig = device.Digitizer("dig2://<host>")
+	for node in dig.child_nodes:
+	    print(node.name)
+	```
+	"""
 
 	def __init__(self, handle):
 		# Public attributes
@@ -116,7 +133,8 @@ class Node:
 	# C API wrappers
 
 	def get_child_nodes(self, path, initial_size = 2 ** 6):
-		"""Wrapper to CAEN_FELib_GetChildHandles()
+		"""
+		Wrapper to CAEN_FELib_GetChildHandles()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@param[in] initial_size		inizial size to allocate for the first iteration
 		@return						child nodes (a list)
@@ -131,7 +149,8 @@ class Node:
 			initial_size = res
 
 	def get_parent_node(self, path):
-		"""Wrapper to CAEN_FELib_GetParentHandle()
+		"""
+		Wrapper to CAEN_FELib_GetParentHandle()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						parent node
 		"""
@@ -140,7 +159,8 @@ class Node:
 		return Node(value)
 
 	def get_node(self, path):
-		"""Wrapper to CAEN_FELib_GetHandle()
+		"""
+		Wrapper to CAEN_FELib_GetHandle()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						node at the provided path
 		"""
@@ -149,7 +169,8 @@ class Node:
 		return Node(value)
 
 	def get_path(self):
-		"""Wrapper to CAEN_FELib_GetPath()
+		"""
+		Wrapper to CAEN_FELib_GetPath()
 		@return						absolute path of the provided handle (a string)
 		"""
 		value = ct.create_string_buffer(256)
@@ -157,7 +178,8 @@ class Node:
 		return value.value.decode()
 
 	def get_node_properties(self, path):
-		"""Wrapper to CAEN_FELib_GetNodeProperties()
+		"""
+		Wrapper to CAEN_FELib_GetNodeProperties()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						tuple containing node name (a string) and the node type (a NodeType)
 		"""
@@ -167,7 +189,8 @@ class Node:
 		return name.value.decode(), NodeType(type.value)
 
 	def get_device_tree(self, initial_size = 2 ** 22):
-		"""Wrapper to CAEN_FELib_GetDeviceTree()
+		"""
+		Wrapper to CAEN_FELib_GetDeviceTree()
 		@param[in] initial_size		inizial size to allocate for the first iteration
 		@return						JSON representation of the node structure (a dictionary)
 		"""
@@ -179,7 +202,8 @@ class Node:
 			initial_size = res
 
 	def get_value(self, path):
-		"""Wrapper to CAEN_FELib_GetValue()
+		"""
+		Wrapper to CAEN_FELib_GetValue()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						value of the node (a string)
 		"""
@@ -188,7 +212,8 @@ class Node:
 		return value.value.decode()
 
 	def get_value_with_arg(self, path, arg):
-		"""Wrapper to CAEN_FELib_GetValue()
+		"""
+		Wrapper to CAEN_FELib_GetValue()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@param[in] arg				optional argument (either a string or `None` that is interpreted as an empty string)
 		@return						value of the node (a string)
@@ -198,14 +223,16 @@ class Node:
 		return value.value.decode()
 
 	def set_value(self, path, value):
-		"""Wrapper to CAEN_FELib_SetValue()
+		"""
+		Wrapper to CAEN_FELib_SetValue()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@param[in] value			value to set (a string)
 		"""
 		lib.SetValue(self.handle, _convert_str(path), _convert_str(value))
 
 	def get_user_register(self, address):
-		"""Wrapper to CAEN_FELib_GetUserRegister()
+		"""
+		Wrapper to CAEN_FELib_GetUserRegister()
 		@param[in] address			user register address
 		@return						value of the register
 		"""
@@ -214,20 +241,43 @@ class Node:
 		return value.value
 
 	def set_user_register(self, address, value):
-		"""Wrapper to CAEN_FELib_SetUserRegister()
+		"""
+		Wrapper to CAEN_FELib_SetUserRegister()
 		@param[in] address			user register address
 		@param[in] value			value of the register
 		"""
 		lib.SetUserRegister(self.handle, address, value)
 
 	def send_command(self, path):
-		"""Wrapper to CAEN_FELib_SendCommand()
+		"""
+		Wrapper to CAEN_FELib_SendCommand()
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		"""
 		lib.SendCommand(self.handle, _convert_str(path))
 
 	def set_read_data_format(self, format):
-		"""Wrapper to CAEN_FELib_SetReadDataFormat()
+		"""
+		Wrapper to CAEN_FELib_SetReadDataFormat()
+
+		In addition to what happens in C library, it also allocate data. Size of fields
+		with `dim > 0` must be specified by a `"shape"` entry in the field description,
+		that is a vector passed to the `shape` argument of `np.empty` constructor.
+		On fields with `dim == 0` the shape can be omitted, and is set to `[]` by default.
+		Fields can be accessed on data attribute of this class, that is a list of _Data
+		inizialized with the field descriptions, in the same order of @p format.
+
+		Example:
+		```python
+		data_format = [
+			{
+				'name': 'EVENT_SIZE',
+				'type': 'SIZE_T',
+			},
+		]
+		ep_node.set_read_data_format(format)
+		print(ep_node.data[0])
+		```
+
 		@param[in] format			JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
 		"""
 		lib.SetReadDataFormat(self.handle, json.dumps(format).encode())
@@ -243,13 +293,46 @@ class Node:
 		# lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
 
 	def read_data(self, timeout):
-		"""Wrapper to CAEN_FELib_ReadData()
+		"""
+		Wrapper to CAEN_FELib_ReadData()
+
+		Unlike what happens in C library, variadic arguments are added automatically
+		according to what has been specified by set_read_data_format(). Data can be
+		retrieved using the data attribute of this class.
+
+		Example:
+		```python
+		# Get reference to data
+		data_0 = ep_node.data[0].value
+
+		# Start acquisition
+		dig.send_command('/cmd/armacquisition')
+		dig.send_command('/cmd/swstartacquisition')
+
+		while True:
+			try:
+				ep_node.read_data(100)
+			except error.Error as ex:
+				if ex.code == error.ErrorCode.Timeout:
+					continue
+				elif ex.code == error.ErrorCode.Stop:
+					break
+				else:
+					raise ex
+
+			# So stuff with data
+			print(data_0)
+
+		dig.send_command('/cmd/disarmacquisition')
+		```
+
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
 		"""
 		lib.ReadData(self.handle, timeout, *[d.arg for d in self.data])
 
 	def has_data(self, timeout):
-		"""Wrapper to CAEN_FELib_HasData()
+		"""
+		Wrapper to CAEN_FELib_HasData()
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
 		"""
 		lib.HasData(self.handle, timeout)
@@ -305,6 +388,18 @@ class Node:
 
 
 class Digitizer(Node):
+	"""
+	Class representing a digitizer. It holds the handle
+	returned by CAEN_FELib_Open(). CAEN_FELib_Close()
+	is called on delete.
+
+	Child nodes do not hold a reference to the digitizer.
+
+	Example:
+	```python
+	dig = device.Digitizer("dig2://<host>")
+	```
+	"""
 
 	def __init__(self, url):
 		super().__init__(self.__open(url))
