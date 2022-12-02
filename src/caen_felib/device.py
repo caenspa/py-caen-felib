@@ -121,7 +121,7 @@ class Node:
 	Class representing a node.
 
 	Example:
-	```python
+	```
 	dig = device.Digitizer("dig2://<host>")
 	for node in dig.child_nodes:
 		print(node.name)
@@ -303,7 +303,7 @@ class Node:
 		inizialized with the field descriptions, in the same order of @p format.
 
 		Example:
-		```python
+		```
 		nch = dig.par.numch.value
 		reclen = dig.par.recordlengths.value
 		format = [
@@ -342,7 +342,7 @@ class Node:
 		retrieved using the data attribute of this class.
 
 		Example:
-		```python
+		```
 		# Get reference to data
 		data_0 = ep_node.data[0].value
 
@@ -427,7 +427,7 @@ class Node:
 		yield from self.child_nodes
 
 	def __repr__(self):
-		return f'Node({self.path})'
+		return f'{__class__.__name__}({self.path})'
 
 	def __str__(self):
 		return self.path
@@ -446,7 +446,7 @@ class Digitizer(Node):
 	Child nodes do not hold a reference to the digitizer.
 
 	Example:
-	```python
+	```
 	# Connect
 	dig = device.Digitizer("dig2://<host>")
 
