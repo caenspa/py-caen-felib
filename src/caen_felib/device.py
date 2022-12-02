@@ -326,7 +326,7 @@ class Node:
 				else:
 					raise ex
 
-			# So stuff with data
+			# Do stuff with data
 			print(data_0)
 
 		dig.cmd.disarmacquisition()
