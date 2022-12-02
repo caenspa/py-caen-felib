@@ -8,6 +8,7 @@ __license__		= 'LGPLv3+'
 
 from enum import Enum
 
+
 class ErrorCode(Enum):
 	"""
 	Wrapper to ::CAEN_FELib_ErrorCode
@@ -28,6 +29,7 @@ class ErrorCode(Enum):
 	Disabled					= -13
 	BadLibraryVersion			= -14
 	CommunicationError			= -15
+
 
 class Error(RuntimeError):
 	"""

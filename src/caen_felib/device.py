@@ -14,6 +14,7 @@ import numpy as np
 
 from caen_felib import lib
 
+
 class _Data:
 	"""
 	Class representing data set by Node.set_read_data_format().
@@ -123,7 +124,7 @@ class Node:
 	```python
 	dig = device.Digitizer("dig2://<host>")
 	for node in dig.child_nodes:
-	    print(node.name)
+		print(node.name)
 	```
 	"""
 
@@ -136,7 +137,7 @@ class Node:
 
 	# C API wrappers
 
-	def get_child_nodes(self, path, initial_size = 2 ** 6):
+	def get_child_nodes(self, path, initial_size=2**6):
 		"""
 		Wrapper to CAEN_FELib_GetChildHandles()
 
@@ -206,7 +207,7 @@ class Node:
 		lib.GetNodeProperties(self.handle, _convert_str(path), name, type)
 		return name.value.decode(), NodeType(type.value)
 
-	def get_device_tree(self, initial_size = 2 ** 22):
+	def get_device_tree(self, initial_size=2**22):
 		"""
 		Wrapper to CAEN_FELib_GetDeviceTree()
 
@@ -374,6 +375,7 @@ class Node:
 	def has_data(self, timeout):
 		"""
 		Wrapper to CAEN_FELib_HasData()
+
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
 		@exception					error.Error in case of error
 		"""
@@ -423,6 +425,12 @@ class Node:
 
 	def __iter__(self):
 		yield from self.child_nodes
+
+	def __repr__(self):
+		return f'Node({self.path})'
+
+	def __str__(self):
+		return self.path
 
 	def __call__(self):
 		"""Execute node"""

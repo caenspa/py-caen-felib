@@ -134,7 +134,7 @@ class _Lib:
 
 	# C API wrappers
 
-	def get_lib_info(self, initial_size = 2 ** 22):
+	def get_lib_info(self, initial_size=2**22):
 		"""
 		Wrapper to CAEN_FELib_GetLibInfo()
 
@@ -213,3 +213,9 @@ class _Lib:
 	def last_error(self):
 		"""Get last error"""
 		return self.get_last_error()
+
+	def __repr__(self):
+		return f'_Lib({self.path})'
+
+	def __str__(self):
+		return self.path
