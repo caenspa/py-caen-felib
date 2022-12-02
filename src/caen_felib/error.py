@@ -33,8 +33,10 @@ class Error(RuntimeError):
 	"""
 	Error type
 
-	It holds the code value according to ErrorCode.
+	It holds the C library error code.
 	"""
 	def __init__(self, message, res):
 		super().__init__(message)
+
+		## Error code as instance of ErrorCode
 		self.code = ErrorCode(res)

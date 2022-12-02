@@ -17,18 +17,21 @@ from caen_felib import lib
 class _Data:
 	"""
 	Class representing data set by Node.set_read_data_format().
-	It holds a numpy ndarray allocated with size specified
+	It holds a `numpy.ndarray` allocated with shape specified
 	in the data format.
 	"""
 
 	def __init__(self, field):
 
 		# Default attributes from fields passed to C library
-		self.name = field['name']
-		self.type = field['type']
-		self.dim = field.get('dim', 0)
 
-		# 'shape' is a Python extension to allow local allocation
+		## Field name
+		self.name = field['name']
+		## Field type
+		self.type = field['type']
+		## Field dimension
+		self.dim = field.get('dim', 0)
+		## Field shape (it is a Python extension to allow local allocation)
 		self.shape = field.get('shape', [])
 
 		if (self.dim != len(self.shape)):
@@ -39,8 +42,12 @@ class _Data:
 		self.__2d_proxy_value = None
 
 		# Other public attributes
+
+		## Instance of `numpy.ndarray` that holds data
+		self.value = np.empty(self.shape, dtype=self.__underlying_type)
+		## Type of _Data.arg
 		self.argtype = self.__generate_argtype()
-		self.value = self.__generate_value()
+		## Reference to _Data.value that is used within Node.read_data
 		self.arg = self.__generate_arg()
 
 	def __generate_underlying_type(self):
@@ -67,9 +74,6 @@ class _Data:
 			return ct.POINTER(self.__underlying_type)
 		else:
 			return ct.POINTER(ct.POINTER(self.__underlying_type))
-
-	def __generate_value(self):
-		return np.empty(self.shape, dtype=self.__underlying_type)
 
 	def __generate_arg(self):
 		if self.dim < 2:
@@ -113,7 +117,7 @@ def _convert_str(path):
 
 class Node:
 	"""
-	Class representing a node. It holds an handle.
+	Class representing a node.
 
 	Example:
 	```python
@@ -124,10 +128,10 @@ class Node:
 	"""
 
 	def __init__(self, handle):
-		# Public attributes
+		## Handle representing the node on the C library
 		self.handle = handle
 
-		# Endpoint data (inizialized by set_read_data_format)
+		## Endpoint data (inizialized by set_read_data_format)
 		self.data = None
 
 	# C API wrappers
@@ -407,12 +411,16 @@ class Digitizer(Node):
 		super().__init__(self.__open(url))
 
 	def __del__(self):
-		"""Wrapper to CAEN_FELib_Close()"""
+		"""
+		Wrapper to CAEN_FELib_Close()
+		"""
 		lib.Close(self.handle)
 
 	@staticmethod
 	def __open(url):
-		"""Wrapper to CAEN_FELib_Open()"""
+		"""
+		Wrapper to CAEN_FELib_Open()
+		"""
 		handle = ct.c_uint64()
 		lib.Open(_convert_str(url), handle)
 		return handle
