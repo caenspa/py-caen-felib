@@ -145,7 +145,7 @@ class _Lib:
 	def get_lib_version(self):
 		"""
 		Wrapper to CAEN_FELib_GetLibVersion()
-		@return						version
+		@return						version (a string)
 		"""
 		value = ct.create_string_buffer(16)
 		self.__GetLibVersion(value)
@@ -155,7 +155,7 @@ class _Lib:
 		"""
 		Wrapper to CAEN_FELib_GetErrorName()
 		@param[in] error			error code returned by library functions
-		@return						error name
+		@return						error name (a string)
 		"""
 		value = ct.create_string_buffer(32)
 		_self.__GetErrorName(error, value)
@@ -165,7 +165,7 @@ class _Lib:
 		"""
 		Wrapper to CAEN_FELib_GetErrorDescription()
 		@param[in] error			error code returned by library functions
-		@return						error description
+		@return						error description (a string)
 		"""
 		value = ct.create_string_buffer(256)
 		_self.__GetErrorDescription(error, value)
@@ -173,7 +173,9 @@ class _Lib:
 
 	def get_last_error(self):
 		"""
-		Wrapper to CAEN_FELib_GetLastError()"""
+		Wrapper to CAEN_FELib_GetLastError()
+		@return						last error description (a string)
+		"""
 		value = ct.create_string_buffer(1024)
 		self.__GetLastError(value)
 		return value.value.decode()
@@ -192,5 +194,5 @@ class _Lib:
 
 	@property
 	def last_error(self):
-		"""Get library version"""
+		"""Get last error"""
 		return self.get_last_error()

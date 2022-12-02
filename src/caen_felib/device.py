@@ -270,8 +270,10 @@ class Node:
 		```python
 		data_format = [
 			{
-				'name': 'EVENT_SIZE',
-				'type': 'SIZE_T',
+				'name': 'WAVEFORM',
+				'type': 'U16',
+				'dim': 2,
+				'shape': [nch, reclen],
 			},
 		]
 		ep_node.set_read_data_format(format)
@@ -306,8 +308,8 @@ class Node:
 		data_0 = ep_node.data[0].value
 
 		# Start acquisition
-		dig.send_command('/cmd/armacquisition')
-		dig.send_command('/cmd/swstartacquisition')
+		dig.cmd.armacquisition()
+		dig.cmd.swstartacquisition()
 
 		while True:
 			try:
@@ -323,7 +325,7 @@ class Node:
 			# So stuff with data
 			print(data_0)
 
-		dig.send_command('/cmd/disarmacquisition')
+		dig.cmd.disarmacquisition()
 		```
 
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
