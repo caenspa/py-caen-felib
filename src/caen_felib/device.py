@@ -139,9 +139,12 @@ class Node:
 	def get_child_nodes(self, path, initial_size = 2 ** 6):
 		"""
 		Wrapper to CAEN_FELib_GetChildHandles()
+
+		@sa child_nodes
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@param[in] initial_size		inizial size to allocate for the first iteration
 		@return						child nodes (a list)
+		@exception					error.Error in case of error
 		"""
 		b_path = _convert_str(path)
 		while True:
@@ -155,8 +158,11 @@ class Node:
 	def get_parent_node(self, path):
 		"""
 		Wrapper to CAEN_FELib_GetParentHandle()
+
+		@sa parent_node
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						parent node
+		@exception					error.Error in case of error
 		"""
 		value = ct.c_uint64()
 		lib.GetParentHandle(self.handle, _convert_str(path), value)
@@ -165,8 +171,10 @@ class Node:
 	def get_node(self, path):
 		"""
 		Wrapper to CAEN_FELib_GetHandle()
+
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						node at the provided path
+		@exception					error.Error in case of error
 		"""
 		value = ct.c_uint64()
 		lib.GetHandle(self.handle, _convert_str(path), value)
@@ -175,7 +183,10 @@ class Node:
 	def get_path(self):
 		"""
 		Wrapper to CAEN_FELib_GetPath()
+
+		@sa path
 		@return						absolute path of the provided handle (a string)
+		@exception					error.Error in case of error
 		"""
 		value = ct.create_string_buffer(256)
 		lib.GetPath(self.handle, value)
@@ -184,8 +195,11 @@ class Node:
 	def get_node_properties(self, path):
 		"""
 		Wrapper to CAEN_FELib_GetNodeProperties()
+
+		@sa name and Node.type
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						tuple containing node name (a string) and the node type (a NodeType)
+		@exception					error.Error in case of error
 		"""
 		name = ct.create_string_buffer(32)
 		type = ct.c_int()
@@ -195,8 +209,10 @@ class Node:
 	def get_device_tree(self, initial_size = 2 ** 22):
 		"""
 		Wrapper to CAEN_FELib_GetDeviceTree()
+
 		@param[in] initial_size		inizial size to allocate for the first iteration
 		@return						JSON representation of the node structure (a dictionary)
+		@exception					error.Error in case of error
 		"""
 		while True:
 			device_tree = ct.create_string_buffer(initial_size)
@@ -208,8 +224,11 @@ class Node:
 	def get_value(self, path):
 		"""
 		Wrapper to CAEN_FELib_GetValue()
+
+		@sa value
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@return						value of the node (a string)
+		@exception					error.Error in case of error
 		"""
 		value = ct.create_string_buffer(256)
 		lib.GetValue(self.handle, _convert_str(path), value)
@@ -218,9 +237,11 @@ class Node:
 	def get_value_with_arg(self, path, arg):
 		"""
 		Wrapper to CAEN_FELib_GetValue()
+
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@param[in] arg				optional argument (either a string or `None` that is interpreted as an empty string)
 		@return						value of the node (a string)
+		@exception					error.Error in case of error
 		"""
 		value = ct.create_string_buffer(_convert_str(arg), 256)
 		lib.GetValue(self.handle, _convert_str(path), value)
@@ -229,16 +250,21 @@ class Node:
 	def set_value(self, path, value):
 		"""
 		Wrapper to CAEN_FELib_SetValue()
+
+		@sa value
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@param[in] value			value to set (a string)
+		@exception					error.Error in case of error
 		"""
 		lib.SetValue(self.handle, _convert_str(path), _convert_str(value))
 
 	def get_user_register(self, address):
 		"""
 		Wrapper to CAEN_FELib_GetUserRegister()
+
 		@param[in] address			user register address
 		@return						value of the register
+		@exception					error.Error in case of error
 		"""
 		value = ct.c_uint32()
 		lib.GetUserRegister(self.handle, address, value)
@@ -247,15 +273,20 @@ class Node:
 	def set_user_register(self, address, value):
 		"""
 		Wrapper to CAEN_FELib_SetUserRegister()
+
 		@param[in] address			user register address
 		@param[in] value			value of the register
+		@exception					error.Error in case of error
 		"""
 		lib.SetUserRegister(self.handle, address, value)
 
 	def send_command(self, path):
 		"""
 		Wrapper to CAEN_FELib_SendCommand()
+
+		@sa __call__
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
+		@exception					error.Error in case of error
 		"""
 		lib.SendCommand(self.handle, _convert_str(path))
 
@@ -285,6 +316,7 @@ class Node:
 		```
 
 		@param[in] format			JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
+		@exception					error.Error in case of error
 		"""
 		lib.SetReadDataFormat(self.handle, json.dumps(format).encode())
 
@@ -333,6 +365,7 @@ class Node:
 		```
 
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
+		@exception					error.Error in case of error
 		"""
 		lib.ReadData(self.handle, timeout, *[d.arg for d in self.data])
 
@@ -340,6 +373,7 @@ class Node:
 		"""
 		Wrapper to CAEN_FELib_HasData()
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
+		@exception					error.Error in case of error
 		"""
 		lib.HasData(self.handle, timeout)
 
@@ -416,9 +450,14 @@ class Digitizer(Node):
 	def __init__(self, url):
 		super().__init__(self.__open(url))
 
+		## Digitizer URL used for the connection
+		self.url = url
+
 	def __del__(self):
 		"""
 		Wrapper to CAEN_FELib_Close()
+
+		@exception					error.Error in case of error
 		"""
 		lib.Close(self.handle)
 
@@ -426,6 +465,10 @@ class Digitizer(Node):
 	def __open(url):
 		"""
 		Wrapper to CAEN_FELib_Open()
+
+		@param[in] url				URL of device to connect (a string, with format `scheme://[host][/path][?query][#fragment]`)
+		@return						root handle
+		@exception					error.Error in case of error
 		"""
 		handle = ct.c_uint64()
 		lib.Open(_convert_str(url), handle)
