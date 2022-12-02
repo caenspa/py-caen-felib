@@ -131,7 +131,7 @@ class Node:
 		## Handle representing the node on the C library
 		self.handle = handle
 
-		## Endpoint data (inizialized by set_read_data_format)
+		## Endpoint data (inizialized by set_read_data_format())
 		self.data = None
 
 	# C API wrappers
@@ -403,7 +403,13 @@ class Digitizer(Node):
 
 	Example:
 	```python
+	# Connect
 	dig = device.Digitizer("dig2://<host>")
+
+	# Do stuff...
+
+	# Disconnect
+	del dig
 	```
 	"""
 
