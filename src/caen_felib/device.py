@@ -115,7 +115,7 @@ class NodeType(Enum):
 	GROUP		= 13
 
 
-def _to_bytes(path: str) -> bytes:
+def _to_bytes(path: Optional[str]) -> bytes:
 	return None if path is None else path.encode()
 
 
