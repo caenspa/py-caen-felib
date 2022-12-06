@@ -9,7 +9,7 @@ __license__		= 'LGPLv3+'
 import ctypes as ct
 from enum import Enum
 import json
-from typing import Iterator, Optional, Tuple, Type
+from typing import Iterator, Optional, Type
 
 import numpy as np
 
@@ -199,7 +199,7 @@ class Node:
 		lib.GetPath(self.handle, value)
 		return value.value.decode()
 
-	def get_node_properties(self, path: Optional[str]=None) -> Tuple[str, NodeType]:
+	def get_node_properties(self, path: Optional[str]=None) -> tuple[str, NodeType]:
 		"""
 		Wrapper to CAEN_FELib_GetNodeProperties()
 
@@ -254,7 +254,7 @@ class Node:
 		lib.GetValue(self.handle, _to_bytes(path), value)
 		return value.value.decode()
 
-	def set_value(self, path: Optional[str], value) -> None:
+	def set_value(self, path: Optional[str], value: str) -> None:
 		"""
 		Wrapper to CAEN_FELib_SetValue()
 
