@@ -1,7 +1,3 @@
-import ctypes as ct
-import json
-import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -90,9 +86,9 @@ while True:
 	try:
 		ep_scope.read_data(100)
 	except error.Error as ex:
-		if ex.code == error.ErrorCode.Timeout:
+		if ex.code == error.ErrorCode.TIMEOUT:
 			continue
-		elif ex.code == error.ErrorCode.Stop:
+		elif ex.code == error.ErrorCode.STOP:
 			print('stop')
 			break
 		else:

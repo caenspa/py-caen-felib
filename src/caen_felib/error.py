@@ -14,22 +14,22 @@ class ErrorCode(Enum):
     """
     Wrapper to ::CAEN_FELib_ErrorCode
     """
-    Success = 0
-    GenericError = -1
-    InvalidParam = -2
-    DeviceAlreadyOpen = -3
-    DeviceNotFound = -4
-    MaxDevicesError = -5
-    CommandError = -6
-    InternalError = -7
-    NotImplemented = -8
-    InvalidHandle = -9
-    DeviceLibraryNotAvailable = -10
-    Timeout = -11
-    Stop = -12
-    Disabled = -13
-    BadLibraryVersion = -14
-    CommunicationError = -15
+    SUCCESS = 0
+    GENERIC_ERROR = -1
+    INVALID_PARAM = -2
+    DEVICE_ALREADY_OPEN = -3
+    DEVICE_NOT_FOUND = -4
+    MAX_DEVICES_ERROR = -5
+    COMMAND_ERROR = -6
+    INTERNAL_ERROR = -7
+    NOT_IMPLEMENTED = -8
+    INVALID_HANDLE = -9
+    DEVICE_LIBRARY_NOT_AVAILABLE = -10
+    TIMEOUT = -11
+    STOP = -12
+    DISABLED = -13
+    BAD_LIBRARY_VERSION = -14
+    COMMUNICATION_ERROR = -15
 
 
 class Error(RuntimeError):
