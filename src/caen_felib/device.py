@@ -132,7 +132,7 @@ class Node:
 	"""
 
 	handle: int
-	data: List[_Data]
+	data: Optional[List[_Data]]
 
 	def __init__(self, handle: int):
 		## Handle representing the node on the C library
