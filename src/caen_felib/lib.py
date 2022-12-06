@@ -10,7 +10,7 @@ import ctypes as ct
 import ctypes.util as ctutil
 import json
 from sys import platform
-from typing import Callable
+from typing import Callable, Dict
 
 import caen_felib.error as error
 
@@ -155,7 +155,7 @@ class _Lib:
 
     # C API wrappers
 
-    def get_lib_info(self, initial_size: int = 2**22) -> dict:
+    def get_lib_info(self, initial_size: int = 2**22) -> Dict:
         """
         Wrapper to CAEN_FELib_GetLibInfo()
 
@@ -221,7 +221,7 @@ class _Lib:
     # Python utilities
 
     @property
-    def info(self) -> dict:
+    def info(self) -> Dict:
         """Get library info"""
         return self.get_lib_info()
 

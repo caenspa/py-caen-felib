@@ -9,7 +9,7 @@ __license__ = 'LGPLv3+'
 import ctypes as ct
 from enum import Enum
 import json
-from typing import List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 
@@ -30,7 +30,7 @@ class _Data:
     value: np.ndarray
     arg: ct.c_void_p
 
-    def __init__(self, field: dict):
+    def __init__(self, field: Dict):
 
         # Default attributes from fields passed to C library
 
@@ -213,7 +213,7 @@ class Node:
         lib.get_node_properties(self.handle, _to_bytes(path), name, node_type)
         return name.value.decode(), NodeType(node_type.value)
 
-    def get_device_tree(self, initial_size: int = 2**22) -> dict:
+    def get_device_tree(self, initial_size: int = 2**22) -> Dict:
         """
         Wrapper to CAEN_FELib_GetDeviceTree()
 
@@ -297,7 +297,7 @@ class Node:
         """
         lib.send_command(self.handle, _to_bytes(path))
 
-    def set_read_data_format(self, fmt: List[dict]) -> None:
+    def set_read_data_format(self, fmt: List[Dict]) -> None:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
