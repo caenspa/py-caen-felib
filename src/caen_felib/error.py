@@ -2,45 +2,45 @@
 @ingroup Python
 """
 
-__author__		= 'Giovanni Cerretani'
-__copyright__	= 'Copyright (C) 2020-2022 CAEN SpA'
-__license__		= 'LGPLv3+'
+__author__ = 'Giovanni Cerretani'
+__copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
+__license__ = 'LGPLv3+'
 
 from enum import Enum
 
 
 class ErrorCode(Enum):
-	"""
-	Wrapper to ::CAEN_FELib_ErrorCode
-	"""
-	Success						= 0
-	GenericError				= -1
-	InvalidParam				= -2
-	DeviceAlreadyOpen			= -3
-	DeviceNotFound				= -4
-	MaxDevicesError				= -5
-	CommandError				= -6
-	InternalError				= -7
-	NotImplemented				= -8
-	InvalidHandle				= -9
-	DeviceLibraryNotAvailable	= -10
-	Timeout						= -11
-	Stop						= -12
-	Disabled					= -13
-	BadLibraryVersion			= -14
-	CommunicationError			= -15
+    """
+    Wrapper to ::CAEN_FELib_ErrorCode
+    """
+    Success = 0
+    GenericError = -1
+    InvalidParam = -2
+    DeviceAlreadyOpen = -3
+    DeviceNotFound = -4
+    MaxDevicesError = -5
+    CommandError = -6
+    InternalError = -7
+    NotImplemented = -8
+    InvalidHandle = -9
+    DeviceLibraryNotAvailable = -10
+    Timeout = -11
+    Stop = -12
+    Disabled = -13
+    BadLibraryVersion = -14
+    CommunicationError = -15
 
 
 class Error(RuntimeError):
-	"""
-	Raised when a wrapped C API function returns
-	negative values.
-	"""
+    """
+    Raised when a wrapped C API function returns
+    negative values.
+    """
 
-	code: ErrorCode
+    code: ErrorCode
 
-	def __init__(self, message: str, res: int):
-		super().__init__(message)
+    def __init__(self, message: str, res: int):
+        super().__init__(message)
 
-		## Error code as instance of ErrorCode
-		self.code = ErrorCode(res)
+        ## Error code as instance of ErrorCode
+        self.code = ErrorCode(res)
