@@ -14,4 +14,4 @@ __contact__		= 'https://www.caen.it/'
 from caen_felib.lib import _Lib
 
 # Initialize library
-lib = _Lib()
+lib = _Lib('CAEN_FELib')

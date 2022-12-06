@@ -9,6 +9,7 @@ __license__		= 'LGPLv3+'
 import ctypes as ct
 import ctypes.util as ctutil
 from sys import platform
+from typing import Callable
 
 import caen_felib.error as error
 
@@ -19,7 +20,25 @@ class _Lib:
 	using ctypes.
 	"""
 
-	def __init__(self):
+	path: str
+	Open: Callable
+	Close: Callable
+	GetDeviceTree: Callable
+	GetChildHandles: Callable
+	GetParentHandle: Callable
+	GetHandle: Callable
+	GetPath: Callable
+	GetNodeProperties: Callable
+	GetValue: Callable
+	SetValue: Callable
+	GetUserRegister: Callable
+	SetUserRegister: Callable
+	SendCommand: Callable
+	SetReadDataFormat: Callable
+	HasData: Callable
+	ReadData: Callable
+
+	def __init__(self, name: str):
 
 		# Platform dependent stuff
 		if platform.startswith('win32'):
@@ -34,7 +53,7 @@ class _Lib:
 			loader_variadic = ct.cdll
 
 		## Library path on the filesystem
-		self.path = ctutil.find_library('CAEN_FELib')
+		self.path = ctutil.find_library(name)
 
 		# Load library
 		self.__lib = loader.LoadLibrary(self.path)
@@ -134,7 +153,7 @@ class _Lib:
 
 	# C API wrappers
 
-	def get_lib_info(self, initial_size=2**22):
+	def get_lib_info(self, initial_size: int=2**22) -> dict:
 		"""
 		Wrapper to CAEN_FELib_GetLibInfo()
 
@@ -149,7 +168,7 @@ class _Lib:
 				return json.loads(lib_info.value.decode())
 			initial_size = res
 
-	def get_lib_version(self):
+	def get_lib_version(self) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetLibVersion()
 
@@ -161,7 +180,7 @@ class _Lib:
 		self.__GetLibVersion(value)
 		return value.value.decode()
 
-	def get_error_name(self, error):
+	def get_error_name(self, error: int) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetErrorName()
 
@@ -173,7 +192,7 @@ class _Lib:
 		_self.__GetErrorName(error, value)
 		return value.value.decode()
 
-	def get_error_description(self, error):
+	def get_error_description(self, error: int) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetErrorDescription()
 
@@ -185,7 +204,7 @@ class _Lib:
 		_self.__GetErrorDescription(error, value)
 		return value.value.decode()
 
-	def get_last_error(self):
+	def get_last_error(self) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetLastError()
 
@@ -200,17 +219,17 @@ class _Lib:
 	# Python utilities
 
 	@property
-	def info(self):
+	def info(self) -> dict:
 		"""Get library info"""
 		return self.get_lib_info()
 
 	@property
-	def version(self):
+	def version(self) -> str:
 		"""Get library version"""
 		return self.get_lib_version()
 
 	@property
-	def last_error(self):
+	def last_error(self) -> str:
 		"""Get last error"""
 		return self.get_last_error()
 

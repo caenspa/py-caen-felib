@@ -36,7 +36,10 @@ class Error(RuntimeError):
 	Raised when a wrapped C API function returns
 	negative values.
 	"""
-	def __init__(self, message, res):
+
+	code: ErrorCode
+
+	def __init__(self, message: str, res: int):
 		super().__init__(message)
 
 		## Error code as instance of ErrorCode

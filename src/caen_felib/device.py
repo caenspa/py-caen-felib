@@ -9,10 +9,11 @@ __license__		= 'LGPLv3+'
 import ctypes as ct
 from enum import Enum
 import json
+from typing import Iterator, Optional, Tuple, Type
 
 import numpy as np
 
-from caen_felib import lib
+from caen_felib import lib, error
 
 
 class _Data:
@@ -22,7 +23,14 @@ class _Data:
 	in the data format.
 	"""
 
-	def __init__(self, field):
+	name: str
+	type:str
+	dim: int
+	shape: list[int]
+	value: np.ndarray
+	arg: ct.c_void_p
+
+	def __init__(self, field: dict):
 
 		# Default attributes from fields passed to C library
 
@@ -46,12 +54,11 @@ class _Data:
 
 		## Instance of `numpy.ndarray` that holds data
 		self.value = np.empty(self.shape, dtype=self.__underlying_type)
-		## Type of _Data.arg
-		self.argtype = self.__generate_argtype()
+
 		## Reference to _Data.value that is used within Node.read_data
 		self.arg = self.__generate_arg()
 
-	def __generate_underlying_type(self):
+	def __generate_underlying_type(self) -> Type:
 		return {
 			# 'PTRDIFF_T' unsupported on Python
 			'U8'			: ct.c_uint8,
@@ -70,16 +77,12 @@ class _Data:
 			'LONG DOUBLE'	: ct.c_longdouble,
 		}[self.type]
 
-	def __generate_argtype(self):
-		if self.dim < 2:
-			return ct.POINTER(self.__underlying_type)
-		else:
-			return ct.POINTER(ct.POINTER(self.__underlying_type))
-
 	def __generate_arg(self):
+		# We use ct.c_void_p for simplicity, instead of more complex types
+		# generated with ct.POINTER, like ct.POINTER(self.__underlying_type).
 		if self.dim < 2:
 			# NumPy 0D and 1D arrays can be used directly.
-			return self.value.ctypes.data_as(self.argtype)
+			return self.value.ctypes.data_as(ct.c_void_p)
 		else:
 			# NumPy 2D arrays cannot be directly used because
 			# they areimplemented as contiguous memory blocks
@@ -88,7 +91,7 @@ class _Data:
 			# a local array of pointers.
 			ptr_gen = (v.ctypes.data for v in self.value)
 			self.__2d_proxy_value = np.fromiter(ptr_gen, dtype=ct.c_void_p)
-			return self.__2d_proxy_value.ctypes.data_as(self.argtype)
+			return self.__2d_proxy_value.ctypes.data_as(ct.c_void_p)
 
 
 class NodeType(Enum):
@@ -112,7 +115,7 @@ class NodeType(Enum):
 	GROUP		= 13
 
 
-def _convert_str(path):
+def _to_bytes(path: str) -> bytes:
 	return None if path is None else path.encode()
 
 
@@ -128,7 +131,10 @@ class Node:
 	```
 	"""
 
-	def __init__(self, handle):
+	handle: int
+	data: list[_Data]
+
+	def __init__(self, handle: int):
 		## Handle representing the node on the C library
 		self.handle = handle
 
@@ -137,7 +143,7 @@ class Node:
 
 	# C API wrappers
 
-	def get_child_nodes(self, path, initial_size=2**6):
+	def get_child_nodes(self, path: Optional[str]=None, initial_size: int=2**6):
 		"""
 		Wrapper to CAEN_FELib_GetChildHandles()
 
@@ -147,16 +153,16 @@ class Node:
 		@return						child nodes (a list)
 		@exception					error.Error in case of error
 		"""
-		b_path = _convert_str(path)
+		b_path = _to_bytes(path)
 		while True:
 			child_handles = np.empty([initial_size], dtype=ct.c_uint64)
 			child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
 			res = lib.GetChildHandles(self.handle, b_path, child_handles_arg, initial_size)
 			if res <= initial_size:
-				return [Node(handle) for handle in child_handles[:res]]
+				return [Node(handle.item()) for handle in child_handles[:res]]
 			initial_size = res
 
-	def get_parent_node(self, path):
+	def get_parent_node(self, path: Optional[str]=None):
 		"""
 		Wrapper to CAEN_FELib_GetParentHandle()
 
@@ -166,10 +172,10 @@ class Node:
 		@exception					error.Error in case of error
 		"""
 		value = ct.c_uint64()
-		lib.GetParentHandle(self.handle, _convert_str(path), value)
-		return Node(value)
+		lib.GetParentHandle(self.handle, _to_bytes(path), value)
+		return Node(value.value)
 
-	def get_node(self, path):
+	def get_node(self, path: Optional[str]=None):
 		"""
 		Wrapper to CAEN_FELib_GetHandle()
 
@@ -178,10 +184,10 @@ class Node:
 		@exception					error.Error in case of error
 		"""
 		value = ct.c_uint64()
-		lib.GetHandle(self.handle, _convert_str(path), value)
-		return Node(value)
+		lib.GetHandle(self.handle, _to_bytes(path), value)
+		return Node(value.value)
 
-	def get_path(self):
+	def get_path(self) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetPath()
 
@@ -193,7 +199,7 @@ class Node:
 		lib.GetPath(self.handle, value)
 		return value.value.decode()
 
-	def get_node_properties(self, path):
+	def get_node_properties(self, path: Optional[str]=None) -> Tuple[str, NodeType]:
 		"""
 		Wrapper to CAEN_FELib_GetNodeProperties()
 
@@ -204,10 +210,10 @@ class Node:
 		"""
 		name = ct.create_string_buffer(32)
 		type = ct.c_int()
-		lib.GetNodeProperties(self.handle, _convert_str(path), name, type)
+		lib.GetNodeProperties(self.handle, _to_bytes(path), name, type)
 		return name.value.decode(), NodeType(type.value)
 
-	def get_device_tree(self, initial_size=2**22):
+	def get_device_tree(self, initial_size: int=2**22) -> dict:
 		"""
 		Wrapper to CAEN_FELib_GetDeviceTree()
 
@@ -222,7 +228,7 @@ class Node:
 				return json.loads(device_tree.value.decode())
 			initial_size = res
 
-	def get_value(self, path):
+	def get_value(self, path: Optional[str]=None) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetValue()
 
@@ -232,10 +238,10 @@ class Node:
 		@exception					error.Error in case of error
 		"""
 		value = ct.create_string_buffer(256)
-		lib.GetValue(self.handle, _convert_str(path), value)
+		lib.GetValue(self.handle, _to_bytes(path), value)
 		return value.value.decode()
 
-	def get_value_with_arg(self, path, arg):
+	def get_value_with_arg(self, path: Optional[str], arg: Optional[str]) -> str:
 		"""
 		Wrapper to CAEN_FELib_GetValue()
 
@@ -244,11 +250,11 @@ class Node:
 		@return						value of the node (a string)
 		@exception					error.Error in case of error
 		"""
-		value = ct.create_string_buffer(_convert_str(arg), 256)
-		lib.GetValue(self.handle, _convert_str(path), value)
+		value = ct.create_string_buffer(_to_bytes(arg), 256)
+		lib.GetValue(self.handle, _to_bytes(path), value)
 		return value.value.decode()
 
-	def set_value(self, path, value):
+	def set_value(self, path: Optional[str], value) -> None:
 		"""
 		Wrapper to CAEN_FELib_SetValue()
 
@@ -257,21 +263,21 @@ class Node:
 		@param[in] value			value to set (a string)
 		@exception					error.Error in case of error
 		"""
-		lib.SetValue(self.handle, _convert_str(path), _convert_str(value))
+		lib.SetValue(self.handle, _to_bytes(path), _to_bytes(value))
 
-	def get_user_register(self, address):
+	def get_user_register(self, address: int) -> int:
 		"""
 		Wrapper to CAEN_FELib_GetUserRegister()
 
 		@param[in] address			user register address
-		@return						value of the register
+		@return						value of the register (a int)
 		@exception					error.Error in case of error
 		"""
 		value = ct.c_uint32()
 		lib.GetUserRegister(self.handle, address, value)
 		return value.value
 
-	def set_user_register(self, address, value):
+	def set_user_register(self, address: int, value: int) -> None:
 		"""
 		Wrapper to CAEN_FELib_SetUserRegister()
 
@@ -281,7 +287,7 @@ class Node:
 		"""
 		lib.SetUserRegister(self.handle, address, value)
 
-	def send_command(self, path):
+	def send_command(self, path: Optional[str]=None) -> None:
 		"""
 		Wrapper to CAEN_FELib_SendCommand()
 
@@ -289,9 +295,9 @@ class Node:
 		@param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
 		@exception					error.Error in case of error
 		"""
-		lib.SendCommand(self.handle, _convert_str(path))
+		lib.SendCommand(self.handle, _to_bytes(path))
 
-	def set_read_data_format(self, format):
+	def set_read_data_format(self, format: list[dict]) -> None:
 		"""
 		Wrapper to CAEN_FELib_SetReadDataFormat()
 
@@ -333,7 +339,7 @@ class Node:
 		# Possible unsafe code could be:
 		# lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
 
-	def read_data(self, timeout):
+	def read_data(self, timeout: int) -> None:
 		"""
 		Wrapper to CAEN_FELib_ReadData()
 
@@ -368,11 +374,12 @@ class Node:
 		```
 
 		@param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
+		@return						data
 		@exception					error.Error in case of error
 		"""
 		lib.ReadData(self.handle, timeout, *[d.arg for d in self.data])
 
-	def has_data(self, timeout):
+	def has_data(self, timeout: int) -> None:
 		"""
 		Wrapper to CAEN_FELib_HasData()
 
@@ -384,17 +391,17 @@ class Node:
 	# Python utilities
 
 	@property
-	def name(self):
+	def name(self) -> str:
 		"""Get node name"""
 		return self.get_node_properties(None)[0]
 
 	@property
-	def type(self):
+	def type(self) -> NodeType:
 		"""Get node type"""
 		return self.get_node_properties(None)[1]
 
 	@property
-	def path(self):
+	def path(self) -> str:
 		"""Get node path"""
 		return self.get_path()
 
@@ -409,13 +416,13 @@ class Node:
 		return self.get_child_nodes(None)
 
 	@property
-	def value(self):
+	def value(self) -> str:
 		"""Get current value"""
 		return self.get_value(None)
 
 	@value.setter
-	def value(self, value):
-		return self.set_value(None, value)
+	def value(self, value: str) -> None:
+		self.set_value(None, value)
 
 	def __getitem__(self, id):
 		return self.get_node(f'/{id}')
@@ -432,7 +439,7 @@ class Node:
 	def __str__(self):
 		return self.path
 
-	def __call__(self):
+	def __call__(self) -> None:
 		"""Execute node"""
 		self.send_command(None)
 
@@ -457,7 +464,9 @@ class Digitizer(Node):
 	```
 	"""
 
-	def __init__(self, url):
+	url: str
+
+	def __init__(self, url: str):
 		super().__init__(self.__open(url))
 
 		## URL used for the connection
@@ -472,7 +481,7 @@ class Digitizer(Node):
 		lib.Close(self.handle)
 
 	@staticmethod
-	def __open(url):
+	def __open(url: str) -> int:
 		"""
 		Wrapper to CAEN_FELib_Open()
 
@@ -481,5 +490,5 @@ class Digitizer(Node):
 		@exception					error.Error in case of error
 		"""
 		handle = ct.c_uint64()
-		lib.Open(_convert_str(url), handle)
-		return handle
+		lib.Open(_to_bytes(url), handle)
+		return handle.value
