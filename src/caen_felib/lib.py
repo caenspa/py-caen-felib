@@ -8,6 +8,7 @@ __license__		= 'LGPLv3+'
 
 import ctypes as ct
 import ctypes.util as ctutil
+import json
 from sys import platform
 from typing import Callable
 
@@ -21,6 +22,7 @@ class _Lib:
 	"""
 
 	path: str
+
 	Open: Callable
 	Close: Callable
 	GetDeviceTree: Callable
@@ -163,7 +165,7 @@ class _Lib:
 		"""
 		while True:
 			lib_info = ct.create_string_buffer(initial_size)
-			res = lib.__GetLibInfo(lib_info, initial_size)
+			res = self.__GetLibInfo(lib_info, initial_size)
 			if res < initial_size: # equal not fine, see docs
 				return json.loads(lib_info.value.decode())
 			initial_size = res
@@ -189,7 +191,7 @@ class _Lib:
 		@exception					error.Error in case of error
 		"""
 		value = ct.create_string_buffer(32)
-		_self.__GetErrorName(error, value)
+		self.__GetErrorName(error, value)
 		return value.value.decode()
 
 	def get_error_description(self, error: int) -> str:
@@ -201,7 +203,7 @@ class _Lib:
 		@exception					error.Error in case of error
 		"""
 		value = ct.create_string_buffer(256)
-		_self.__GetErrorDescription(error, value)
+		self.__GetErrorDescription(error, value)
 		return value.value.decode()
 
 	def get_last_error(self) -> str:
