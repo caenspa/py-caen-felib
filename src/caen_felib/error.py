@@ -7,6 +7,7 @@ __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
 __license__ = 'LGPLv3+'
 
 from enum import Enum
+from typing import Callable
 
 
 class ErrorCode(Enum):
@@ -38,9 +39,13 @@ class Error(RuntimeError):
     """
 
     code: ErrorCode
+    func: Callable
 
-    def __init__(self, message: str, res: int):
+    def __init__(self, message: str, res: int, func: Callable):
         super().__init__(message)
 
         ## Error code as instance of ErrorCode
         self.code = ErrorCode(res)
+
+        ## Pointer to failed function
+        self.func = func

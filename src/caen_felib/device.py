@@ -43,7 +43,7 @@ class _Data:
         ## Field shape (it is a Python extension to allow local allocation)
         self.shape = field.get('shape', [])
 
-        if (self.dim != len(self.shape)):
+        if self.dim != len(self.shape):
             raise RuntimeError('shape length must match dim')
 
         # Private attributes
@@ -157,7 +157,7 @@ class Node:
         while True:
             child_handles = np.empty([initial_size], dtype=ct.c_uint64)
             child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
-            res = lib.GetChildHandles(self.handle, b_path, child_handles_arg, initial_size)
+            res = lib.get_child_handles(self.handle, b_path, child_handles_arg, initial_size)
             if res <= initial_size:
                 return [Node(handle.item()) for handle in child_handles[:res]]
             initial_size = res
@@ -172,7 +172,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.GetParentHandle(self.handle, _to_bytes(path), value)
+        lib.get_parent_handle(self.handle, _to_bytes(path), value)
         return Node(value.value)
 
     def get_node(self, path: Optional[str] = None):
@@ -184,7 +184,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.GetHandle(self.handle, _to_bytes(path), value)
+        lib.get_handle(self.handle, _to_bytes(path), value)
         return Node(value.value)
 
     def get_path(self) -> str:
@@ -196,7 +196,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(256)
-        lib.GetPath(self.handle, value)
+        lib.get_path(self.handle, value)
         return value.value.decode()
 
     def get_node_properties(self, path: Optional[str] = None) -> Tuple[str, NodeType]:
@@ -209,9 +209,9 @@ class Node:
         @exception					error.Error in case of error
         """
         name = ct.create_string_buffer(32)
-        type = ct.c_int()
-        lib.GetNodeProperties(self.handle, _to_bytes(path), name, type)
-        return name.value.decode(), NodeType(type.value)
+        node_type = ct.c_int()
+        lib.get_node_properties(self.handle, _to_bytes(path), name, node_type)
+        return name.value.decode(), NodeType(node_type.value)
 
     def get_device_tree(self, initial_size: int = 2**22) -> dict:
         """
@@ -223,7 +223,7 @@ class Node:
         """
         while True:
             device_tree = ct.create_string_buffer(initial_size)
-            res = lib.GetDeviceTree(self.handle, device_tree, initial_size)
+            res = lib.get_device_tree(self.handle, device_tree, initial_size)
             if res < initial_size:  # equal not fine, see docs
                 return json.loads(device_tree.value.decode())
             initial_size = res
@@ -238,7 +238,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(256)
-        lib.GetValue(self.handle, _to_bytes(path), value)
+        lib.get_value(self.handle, _to_bytes(path), value)
         return value.value.decode()
 
     def get_value_with_arg(self, path: Optional[str], arg: Optional[str]) -> str:
@@ -251,7 +251,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(_to_bytes(arg), 256)
-        lib.GetValue(self.handle, _to_bytes(path), value)
+        lib.get_value(self.handle, _to_bytes(path), value)
         return value.value.decode()
 
     def set_value(self, path: Optional[str], value: str) -> None:
@@ -263,7 +263,7 @@ class Node:
         @param[in] value			value to set (a string)
         @exception					error.Error in case of error
         """
-        lib.SetValue(self.handle, _to_bytes(path), _to_bytes(value))
+        lib.set_value(self.handle, _to_bytes(path), _to_bytes(value))
 
     def get_user_register(self, address: int) -> int:
         """
@@ -274,7 +274,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint32()
-        lib.GetUserRegister(self.handle, address, value)
+        lib.get_user_register(self.handle, address, value)
         return value.value
 
     def set_user_register(self, address: int, value: int) -> None:
@@ -285,7 +285,7 @@ class Node:
         @param[in] value			value of the register
         @exception					error.Error in case of error
         """
-        lib.SetUserRegister(self.handle, address, value)
+        lib.set_user_register(self.handle, address, value)
 
     def send_command(self, path: Optional[str] = None) -> None:
         """
@@ -295,9 +295,9 @@ class Node:
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
         @exception					error.Error in case of error
         """
-        lib.SendCommand(self.handle, _to_bytes(path))
+        lib.send_command(self.handle, _to_bytes(path))
 
-    def set_read_data_format(self, format: List[dict]) -> None:
+    def set_read_data_format(self, fmt: List[dict]) -> None:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
@@ -327,10 +327,10 @@ class Node:
         @param[in] format			JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
         @exception					error.Error in case of error
         """
-        lib.SetReadDataFormat(self.handle, json.dumps(format).encode())
+        lib.set_read_data_format(self.handle, json.dumps(fmt).encode())
 
         # Allocate requested fields
-        self.data = [_Data(field) for field in format]
+        self.data = [_Data(field) for field in fmt]
 
         # Important:
         # Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
@@ -377,7 +377,7 @@ class Node:
         @return						data
         @exception					error.Error in case of error
         """
-        lib.ReadData(self.handle, timeout, *[d.arg for d in self.data])
+        lib.read_data(self.handle, timeout, *[d.arg for d in self.data])
 
     def has_data(self, timeout: int) -> None:
         """
@@ -386,7 +386,7 @@ class Node:
         @param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
         @exception					error.Error in case of error
         """
-        lib.HasData(self.handle, timeout)
+        lib.has_data(self.handle, timeout)
 
     # Python utilities
 
@@ -424,8 +424,8 @@ class Node:
     def value(self, value: str) -> None:
         self.set_value(None, value)
 
-    def __getitem__(self, id):
-        return self.get_node(f'/{id}')
+    def __getitem__(self, index):
+        return self.get_node(f'/{index}')
 
     def __getattr__(self, name):
         return self.__getitem__(name)
@@ -478,7 +478,7 @@ class Digitizer(Node):
 
         @exception					error.Error in case of error
         """
-        lib.Close(self.handle)
+        lib.close(self.handle)
 
     @staticmethod
     def __open(url: str) -> int:
@@ -490,5 +490,5 @@ class Digitizer(Node):
         @exception					error.Error in case of error
         """
         handle = ct.c_uint64()
-        lib.Open(_to_bytes(url), handle)
+        lib.open(_to_bytes(url), handle)
         return handle.value

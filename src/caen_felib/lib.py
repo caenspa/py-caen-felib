@@ -23,23 +23,22 @@ class _Lib:
     """
 
     path: str
-
-    Open: Callable
-    Close: Callable
-    GetDeviceTree: Callable
-    GetChildHandles: Callable
-    GetParentHandle: Callable
-    GetHandle: Callable
-    GetPath: Callable
-    GetNodeProperties: Callable
-    GetValue: Callable
-    SetValue: Callable
-    GetUserRegister: Callable
-    SetUserRegister: Callable
-    SendCommand: Callable
-    SetReadDataFormat: Callable
-    HasData: Callable
-    ReadData: Callable
+    open: Callable
+    close: Callable
+    get_device_tree: Callable
+    get_child_handles: Callable
+    get_parent_handle: Callable
+    get_handle: Callable
+    get_path: Callable
+    get_node_properties: Callable
+    get_value: Callable
+    set_value: Callable
+    get_user_register: Callable
+    set_user_register: Callable
+    send_command: Callable
+    set_read_data_format: Callable
+    has_data: Callable
+    read_data: Callable
 
     def __init__(self, name: str):
 
@@ -63,69 +62,69 @@ class _Lib:
         self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
 
         # Load API not related to devices
-        self.__GetLibInfo = self.__lib.CAEN_FELib_GetLibInfo
-        self.__set(self.__GetLibInfo, [ct.c_char_p, ct.c_size_t])
+        self.__get_lib_info = self.__lib.CAEN_FELib_GetLibInfo
+        self.__set(self.__get_lib_info, [ct.c_char_p, ct.c_size_t])
 
-        self.__GetLibVersion = self.__lib.CAEN_FELib_GetLibVersion
-        self.__set(self.__GetLibVersion, [ct.c_char_p])
+        self.__get_lib_version = self.__lib.CAEN_FELib_GetLibVersion
+        self.__set(self.__get_lib_version, [ct.c_char_p])
 
-        self.__GetErrorName = self.__lib.CAEN_FELib_GetErrorName
-        self.__set(self.__GetErrorName, [ct.c_int, ct.c_char_p])
+        self.__get_error_name = self.__lib.CAEN_FELib_GetErrorName
+        self.__set(self.__get_error_name, [ct.c_int, ct.c_char_p])
 
-        self.__GetErrorDescription = self.__lib.CAEN_FELib_GetErrorDescription
-        self.__set(self.__GetErrorDescription, [ct.c_int, ct.c_char_p])
+        self.__get_error_description = self.__lib.CAEN_FELib_GetErrorDescription
+        self.__set(self.__get_error_description, [ct.c_int, ct.c_char_p])
 
-        self.__GetLastError = self.__lib.CAEN_FELib_GetLastError
-        self.__set(self.__GetLastError, [ct.c_char_p])
+        self.__get_last_error = self.__lib.CAEN_FELib_GetLastError
+        self.__set(self.__get_last_error, [ct.c_char_p])
 
-        self.__DevicesDiscovery = self.__lib.CAEN_FELib_DevicesDiscovery
-        self.__set(self.__DevicesDiscovery, [ct.c_char_p, ct.c_size_t, ct.c_int])
+        self.__devices_discovery = self.__lib.CAEN_FELib_DevicesDiscovery
+        self.__set(self.__devices_discovery, [ct.c_char_p, ct.c_size_t, ct.c_int])
 
         # Load API
-        self.Open = self.__lib.CAEN_FELib_Open
-        self.__set(self.Open, [ct.c_char_p, ct.POINTER(ct.c_uint64)])
+        self.open = self.__lib.CAEN_FELib_Open
+        self.__set(self.open, [ct.c_char_p, ct.POINTER(ct.c_uint64)])
 
-        self.Close = self.__lib.CAEN_FELib_Close
-        self.__set(self.Close, [ct.c_uint64])
+        self.close = self.__lib.CAEN_FELib_Close
+        self.__set(self.close, [ct.c_uint64])
 
-        self.GetDeviceTree = self.__lib.CAEN_FELib_GetDeviceTree
-        self.__set(self.GetDeviceTree, [ct.c_uint64, ct.c_char_p, ct.c_size_t])
+        self.get_device_tree = self.__lib.CAEN_FELib_GetDeviceTree
+        self.__set(self.get_device_tree, [ct.c_uint64, ct.c_char_p, ct.c_size_t])
 
-        self.GetChildHandles = self.__lib.CAEN_FELib_GetChildHandles
-        self.__set(self.GetChildHandles, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64), ct.c_size_t])
+        self.get_child_handles = self.__lib.CAEN_FELib_GetChildHandles
+        self.__set(self.get_child_handles, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64), ct.c_size_t])
 
-        self.GetParentHandle = self.__lib.CAEN_FELib_GetParentHandle
-        self.__set(self.GetParentHandle, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
+        self.get_parent_handle = self.__lib.CAEN_FELib_GetParentHandle
+        self.__set(self.get_parent_handle, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
 
-        self.GetHandle = self.__lib.CAEN_FELib_GetHandle
-        self.__set(self.GetHandle, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
+        self.get_handle = self.__lib.CAEN_FELib_GetHandle
+        self.__set(self.get_handle, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
 
-        self.GetPath = self.__lib.CAEN_FELib_GetPath
-        self.__set(self.GetPath, [ct.c_uint64, ct.c_char_p])
+        self.get_path = self.__lib.CAEN_FELib_GetPath
+        self.__set(self.get_path, [ct.c_uint64, ct.c_char_p])
 
-        self.GetNodeProperties = self.__lib.CAEN_FELib_GetNodeProperties
-        self.__set(self.GetNodeProperties, [ct.c_uint64, ct.c_char_p, ct.c_char_p, ct.POINTER(ct.c_int)])
+        self.get_node_properties = self.__lib.CAEN_FELib_GetNodeProperties
+        self.__set(self.get_node_properties, [ct.c_uint64, ct.c_char_p, ct.c_char_p, ct.POINTER(ct.c_int)])
 
-        self.GetValue = self.__lib.CAEN_FELib_GetValue
-        self.__set(self.GetValue, [ct.c_uint64, ct.c_char_p, ct.c_char_p])
+        self.get_value = self.__lib.CAEN_FELib_GetValue
+        self.__set(self.get_value, [ct.c_uint64, ct.c_char_p, ct.c_char_p])
 
-        self.SetValue = self.__lib.CAEN_FELib_SetValue
-        self.__set(self.SetValue, [ct.c_uint64, ct.c_char_p, ct.c_char_p])
+        self.set_value = self.__lib.CAEN_FELib_SetValue
+        self.__set(self.set_value, [ct.c_uint64, ct.c_char_p, ct.c_char_p])
 
-        self.GetUserRegister = self.__lib.CAEN_FELib_GetUserRegister
-        self.__set(self.GetUserRegister, [ct.c_uint64, ct.c_uint32, ct.POINTER(ct.c_uint32)])
+        self.get_user_register = self.__lib.CAEN_FELib_GetUserRegister
+        self.__set(self.get_user_register, [ct.c_uint64, ct.c_uint32, ct.POINTER(ct.c_uint32)])
 
-        self.SetUserRegister = self.__lib.CAEN_FELib_SetUserRegister
-        self.__set(self.SetUserRegister, [ct.c_uint64, ct.c_uint32, ct.c_uint32])
+        self.set_user_register = self.__lib.CAEN_FELib_SetUserRegister
+        self.__set(self.set_user_register, [ct.c_uint64, ct.c_uint32, ct.c_uint32])
 
-        self.SendCommand = self.__lib.CAEN_FELib_SendCommand
-        self.__set(self.SendCommand, [ct.c_uint64, ct.c_char_p])
+        self.send_command = self.__lib.CAEN_FELib_SendCommand
+        self.__set(self.send_command, [ct.c_uint64, ct.c_char_p])
 
-        self.SetReadDataFormat = self.__lib.CAEN_FELib_SetReadDataFormat
-        self.__set(self.SetReadDataFormat, [ct.c_uint64, ct.c_char_p])
+        self.set_read_data_format = self.__lib.CAEN_FELib_SetReadDataFormat
+        self.__set(self.set_read_data_format, [ct.c_uint64, ct.c_char_p])
 
-        self.HasData = self.__lib.CAEN_FELib_HasData
-        self.__set(self.HasData, [ct.c_uint64, ct.c_int])
+        self.has_data = self.__lib.CAEN_FELib_HasData
+        self.__set(self.has_data, [ct.c_uint64, ct.c_int])
 
         # Load variadic API
         # Notes:
@@ -140,13 +139,13 @@ class _Lib:
         #     different signatures, so arguments (always pointers in this case) must be placed without
         #     relying on ctypes automatic conversions with from_param methods. For more details, see
         #     https://stackoverflow.com/q/74630617/3287591
-        self.ReadData = self.__lib_variadic.CAEN_FELib_ReadData
-        self.__set(self.ReadData, [ct.c_uint64, ct.c_int])
+        self.read_data = self.__lib_variadic.CAEN_FELib_ReadData
+        self.__set(self.read_data, [ct.c_uint64, ct.c_int])
 
     def __api_errcheck(self, res, func, args):
         # res can be positive on GetChildHandles and GetDeviceTree
         if res < 0:
-            raise error.Error(self.last_error, res)
+            raise error.Error(self.last_error, res, func)
         return res
 
     def __set(self, func, argtypes):
@@ -166,8 +165,8 @@ class _Lib:
         """
         while True:
             lib_info = ct.create_string_buffer(initial_size)
-            res = self.__GetLibInfo(lib_info, initial_size)
-            if res < initial_size: # equal not fine, see docs
+            res = self.__get_lib_info(lib_info, initial_size)
+            if res < initial_size:  # equal not fine, see docs
                 return json.loads(lib_info.value.decode())
             initial_size = res
 
@@ -180,31 +179,31 @@ class _Lib:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(16)
-        self.__GetLibVersion(value)
+        self.__get_lib_version(value)
         return value.value.decode()
 
-    def get_error_name(self, error: int) -> str:
+    def get_error_name(self, error_code: int) -> str:
         """
         Wrapper to CAEN_FELib_GetErrorName()
 
-        @param[in] error			error code returned by library functions
+        @param[in] error_code		error code returned by library functions
         @return						error name (a string)
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(32)
-        self.__GetErrorName(error, value)
+        self.__get_error_name(error_code, value)
         return value.value.decode()
 
-    def get_error_description(self, error: int) -> str:
+    def get_error_description(self, error_code: int) -> str:
         """
         Wrapper to CAEN_FELib_GetErrorDescription()
 
-        @param[in] error			error code returned by library functions
+        @param[in] error_code		error code returned by library functions
         @return						error description (a string)
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(256)
-        self.__GetErrorDescription(error, value)
+        self.__get_error_description(error_code, value)
         return value.value.decode()
 
     def get_last_error(self) -> str:
@@ -216,7 +215,7 @@ class _Lib:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(1024)
-        self.__GetLastError(value)
+        self.__get_last_error(value)
         return value.value.decode()
 
     # Python utilities
