@@ -9,11 +9,11 @@ __license__		= 'LGPLv3+'
 import ctypes as ct
 from enum import Enum
 import json
-from typing import Iterator, Optional, Type
+from typing import List, Optional, Tuple, Type
 
 import numpy as np
 
-from caen_felib import lib, error
+from caen_felib import lib
 
 
 class _Data:
@@ -26,7 +26,7 @@ class _Data:
 	name: str
 	type:str
 	dim: int
-	shape: list[int]
+	shape: List[int]
 	value: np.ndarray
 	arg: ct.c_void_p
 
@@ -132,7 +132,7 @@ class Node:
 	"""
 
 	handle: int
-	data: list[_Data]
+	data: List[_Data]
 
 	def __init__(self, handle: int):
 		## Handle representing the node on the C library
@@ -199,7 +199,7 @@ class Node:
 		lib.GetPath(self.handle, value)
 		return value.value.decode()
 
-	def get_node_properties(self, path: Optional[str]=None) -> tuple[str, NodeType]:
+	def get_node_properties(self, path: Optional[str]=None) -> Tuple[str, NodeType]:
 		"""
 		Wrapper to CAEN_FELib_GetNodeProperties()
 
@@ -297,7 +297,7 @@ class Node:
 		"""
 		lib.SendCommand(self.handle, _to_bytes(path))
 
-	def set_read_data_format(self, format: list[dict]) -> None:
+	def set_read_data_format(self, format: List[dict]) -> None:
 		"""
 		Wrapper to CAEN_FELib_SetReadDataFormat()
 
