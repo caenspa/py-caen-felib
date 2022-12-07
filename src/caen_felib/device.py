@@ -9,7 +9,7 @@ __license__ = 'LGPLv3+'
 import ctypes as ct
 from enum import Enum
 import json
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
 
@@ -30,7 +30,9 @@ class _Data:
     value: np.ndarray
     arg: ct.c_void_p
 
-    def __init__(self, field: Dict):
+    Field = TypedDict('Field', {'name': str, 'type': str, 'dim': int, 'shape': List[int]})
+
+    def __init__(self, field: Field):
 
         # Default attributes from fields passed to C library
 
@@ -297,7 +299,7 @@ class Node:
         """
         lib.send_command(self.handle, _to_bytes(path))
 
-    def set_read_data_format(self, fmt: List[Dict]) -> None:
+    def set_read_data_format(self, fmt: List[_Data.Field]) -> None:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
