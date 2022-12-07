@@ -122,17 +122,10 @@ class NodeType(Enum):
 class Node:
     """
     Class representing a node.
-
-    Example:
-    ```
-    dig = device.Digitizer("dig2://<host>")
-    for node in dig.child_nodes:
-        print(node.name)
-    ```
     """
 
     ## Handle representing the node on the C library
-    handle: int = -1
+    handle: int
 
     ## Endpoint data (inizialized by set_read_data_format())
     data: List[_Data] = field(default_factory=list)
@@ -148,8 +141,8 @@ class Node:
 
     # C API wrappers
 
-    @staticmethod
-    def open(url: str):
+    @classmethod
+    def open(cls, url: str):
         """
         Wrapper to CAEN_FELib_Open()
 
@@ -159,7 +152,7 @@ class Node:
         """
         value = ct.c_uint64()
         lib.open(Node.__to_bytes(url), value)
-        return Node(value.value)
+        return cls(value.value)
 
     def close(self) -> None:
         """
