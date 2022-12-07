@@ -42,6 +42,8 @@ class _Lib:
 
     def __init__(self, name: str):
 
+        loader: ct.LibraryLoader
+
         # Platform dependent stuff
         if platform.startswith('win32'):
             # API functions are declared as __stdcall, but variadic
@@ -55,9 +57,12 @@ class _Lib:
             loader_variadic = ct.cdll
 
         ## Library path on the filesystem
-        self.path = ctutil.find_library(name)
+        path = ctutil.find_library(name)
+        if not path:
+            raise RuntimeError(f'Library {name} not found.')
 
         # Load library
+        self.path = path
         self.__lib = loader.LoadLibrary(self.path)
         self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
 

@@ -7,6 +7,7 @@ __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
 __license__ = 'LGPLv3+'
 
 import ctypes as ct
+from dataclasses import dataclass, field
 from enum import Enum
 import json
 from typing import Dict, List, Optional, Tuple, Type, TypedDict
@@ -32,18 +33,18 @@ class _Data:
 
     Field = TypedDict('Field', {'name': str, 'type': str, 'dim': int, 'shape': List[int]})
 
-    def __init__(self, field: Field):
+    def __init__(self, data_field: Field):
 
         # Default attributes from fields passed to C library
 
         ## Field name
-        self.name = field['name']
+        self.name = data_field['name']
         ## Field type
-        self.type = field['type']
+        self.type = data_field['type']
         ## Field dimension
-        self.dim = field.get('dim', 0)
+        self.dim = data_field.get('dim', 0)
         ## Field shape (it is a Python extension to allow local allocation)
-        self.shape = field.get('shape', [])
+        self.shape = data_field.get('shape', [])
 
         if self.dim != len(self.shape):
             raise RuntimeError('shape length must match dim')
@@ -117,10 +118,7 @@ class NodeType(Enum):
     GROUP = 13
 
 
-def _to_bytes(path: Optional[str]) -> bytes:
-    return None if path is None else path.encode()
-
-
+@dataclass
 class Node:
     """
     Class representing a node.
@@ -133,15 +131,20 @@ class Node:
     ```
     """
 
-    handle: int
-    data: Optional[List[_Data]]
+    ## Handle representing the node on the C library
+    handle: int = -1
 
-    def __init__(self, handle: int):
-        ## Handle representing the node on the C library
-        self.handle = handle
+    ## Endpoint data (inizialized by set_read_data_format())
+    data: List[_Data] = field(default_factory=list)
 
-        ## Endpoint data (inizialized by set_read_data_format())
-        self.data = None
+    # Private utilities
+    @staticmethod
+    def __to_bytes(path: str) -> bytes:
+        return path.encode()
+
+    @staticmethod
+    def __to_bytes_opt(path: Optional[str]) -> Optional[bytes]:
+        return None if path is None else Node.__to_bytes(path)
 
     # C API wrappers
 
@@ -155,7 +158,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.open(_to_bytes(url), value)
+        lib.open(Node.__to_bytes(url), value)
         return Node(value.value)
 
     def close(self) -> None:
@@ -177,7 +180,7 @@ class Node:
         @return						child nodes (a list)
         @exception					error.Error in case of error
         """
-        b_path = _to_bytes(path)
+        b_path = self.__to_bytes_opt(path)
         while True:
             child_handles = np.empty([initial_size], dtype=ct.c_uint64)
             child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
@@ -196,7 +199,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.get_parent_handle(self.handle, _to_bytes(path), value)
+        lib.get_parent_handle(self.handle, self.__to_bytes_opt(path), value)
         return Node(value.value)
 
     def get_node(self, path: Optional[str] = None):
@@ -208,7 +211,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.get_handle(self.handle, _to_bytes(path), value)
+        lib.get_handle(self.handle, self.__to_bytes_opt(path), value)
         return Node(value.value)
 
     def get_path(self) -> str:
@@ -234,7 +237,7 @@ class Node:
         """
         name = ct.create_string_buffer(32)
         node_type = ct.c_int()
-        lib.get_node_properties(self.handle, _to_bytes(path), name, node_type)
+        lib.get_node_properties(self.handle, self.__to_bytes_opt(path), name, node_type)
         return name.value.decode(), NodeType(node_type.value)
 
     def get_device_tree(self, initial_size: int = 2**22) -> Dict:
@@ -262,10 +265,10 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(256)
-        lib.get_value(self.handle, _to_bytes(path), value)
+        lib.get_value(self.handle, self.__to_bytes_opt(path), value)
         return value.value.decode()
 
-    def get_value_with_arg(self, path: Optional[str], arg: Optional[str]) -> str:
+    def get_value_with_arg(self, path: Optional[str], arg: str) -> str:
         """
         Wrapper to CAEN_FELib_GetValue()
 
@@ -274,8 +277,8 @@ class Node:
         @return						value of the node (a string)
         @exception					error.Error in case of error
         """
-        value = ct.create_string_buffer(_to_bytes(arg), 256)
-        lib.get_value(self.handle, _to_bytes(path), value)
+        value = ct.create_string_buffer(self.__to_bytes(arg), 256)
+        lib.get_value(self.handle, self.__to_bytes_opt(path), value)
         return value.value.decode()
 
     def set_value(self, path: Optional[str], value: str) -> None:
@@ -287,7 +290,7 @@ class Node:
         @param[in] value			value to set (a string)
         @exception					error.Error in case of error
         """
-        lib.set_value(self.handle, _to_bytes(path), _to_bytes(value))
+        lib.set_value(self.handle, self.__to_bytes_opt(path), self.__to_bytes(value))
 
     def get_user_register(self, address: int) -> int:
         """
@@ -319,7 +322,7 @@ class Node:
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
         @exception					error.Error in case of error
         """
-        lib.send_command(self.handle, _to_bytes(path))
+        lib.send_command(self.handle, self.__to_bytes_opt(path))
 
     def set_read_data_format(self, fmt: List[_Data.Field]) -> None:
         """
@@ -354,7 +357,7 @@ class Node:
         lib.set_read_data_format(self.handle, json.dumps(fmt).encode())
 
         # Allocate requested fields
-        self.data = [_Data(field) for field in fmt]
+        self.data = [_Data(f) for f in fmt]
 
         # Important:
         # Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
@@ -474,7 +477,7 @@ class Node:
         self.send_command(None)
 
 
-def open(url: str) -> Node:
+def connect(url: str) -> Node:
     """
     Connect to a device. Same of Node.open().
 

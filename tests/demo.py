@@ -32,7 +32,7 @@ dig.set_value('/ch/0/par/TriggerThrMode', 'Absolute')
 dig.set_value('/ch/0/par/SelfTriggerEdge', 'Fall')
 
 for i in range(nch):
-	dig.set_value(f'/ch/{i}/par/DCOffset', f'{50 + i}')
+	dig.set_value(f'/ch/{i}/par/DCOffset', f'{0 + i}')
 	dig.set_value(f'/ch/{i}/par/WaveDataSource', 'adc_data')
 
 dig.set_value('/endpoint/par/activeendpoint', 'scope')

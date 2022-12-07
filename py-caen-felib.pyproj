@@ -30,6 +30,9 @@
     <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="setup.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="src\caen_felib\device.py" />
     <Compile Include="src\caen_felib\error.py" />
     <Compile Include="src\caen_felib\lib.py" />
