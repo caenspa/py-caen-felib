@@ -31,9 +31,9 @@ class _Data:
     value: np.ndarray
     arg: ct.c_void_p
 
-    Field = TypedDict('Field', {'name': str, 'type': str, 'dim': int, 'shape': List[int]})
+    DataField = TypedDict('DataField', {'name': str, 'type': str, 'dim': int, 'shape': List[int]})
 
-    def __init__(self, data_field: Field):
+    def __init__(self, data_field: DataField):
 
         # Default attributes from fields passed to C library
 
@@ -324,7 +324,7 @@ class Node:
         """
         lib.send_command(self.handle, self.__to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[_Data.Field]) -> None:
+    def set_read_data_format(self, fmt: List[_Data.DataField]) -> None:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 

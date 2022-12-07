@@ -8,7 +8,7 @@ from caen_felib import lib, device, error
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
-dig = device.open('dig2://caendgtz-eth-16218.caen.local')
+dig = device.connect('dig2://caendgtz-eth-16218.caen.local')
 
 # Get board info
 nch = int(dig.par.numch.value)
