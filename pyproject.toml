@@ -1,6 +1,5 @@
 [project]
 name = "caen_felib"
-version = "1.2.2"
 authors = [
 	{ name="Giovanni Cerretani", email="g.cerretani@caen.it" },
 	{ name="Daniele Ninci", email="d.ninci@caen.it" },
@@ -16,6 +15,10 @@ classifiers = [
 dependencies = [
 	"numpy>=1.17",
 ]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "caen_felib.__version__"}
 
 [project.urls]
 homepage = "https://www.caen.it"

@@ -146,7 +146,7 @@ class Node:
     # C API wrappers
 
     @staticmethod
-    def open(url: str) -> int:
+    def open(url: str):
         """
         Wrapper to CAEN_FELib_Open()
 
@@ -158,7 +158,7 @@ class Node:
         lib.open(_to_bytes(url), value)
         return Node(value.value)
 
-    def close(self):
+    def close(self) -> None:
         """
         Wrapper to CAEN_FELib_Close()
 
