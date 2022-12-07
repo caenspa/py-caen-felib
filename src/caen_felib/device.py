@@ -145,6 +145,28 @@ class Node:
 
     # C API wrappers
 
+    @staticmethod
+    def open(url: str) -> int:
+        """
+        Wrapper to CAEN_FELib_Open()
+
+        @param[in] url				URL of device to connect (a string, with format `scheme://[host][/path][?query][#fragment]`)
+        @return						the digitizer node
+        @exception					error.Error in case of error
+        """
+        value = ct.c_uint64()
+        lib.open(_to_bytes(url), value)
+        return Node(value.value)
+
+    def close(self):
+        """
+        Wrapper to CAEN_FELib_Close()
+
+        @exception					error.Error in case of error
+        """
+        lib.close(self.handle)
+        self.handle = -1
+
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6):
         """
         Wrapper to CAEN_FELib_GetChildHandles()
@@ -326,7 +348,7 @@ class Node:
         print(ep_node.data[0])
         ```
 
-        @param[in] format			JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
+        @param[in] fmt				JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
         @exception					error.Error in case of error
         """
         lib.set_read_data_format(self.handle, json.dumps(fmt).encode())
@@ -426,6 +448,12 @@ class Node:
     def value(self, value: str) -> None:
         self.set_value(None, value)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def __getitem__(self, index):
         return self.get_node(f'/{index}')
 
@@ -446,51 +474,18 @@ class Node:
         self.send_command(None)
 
 
-class Digitizer(Node):
+def open(url: str) -> Node:
     """
-    Class representing a digitizer. It holds the handle
-    returned by CAEN_FELib_Open(). CAEN_FELib_Close()
-    is called on delete.
-
-    Child nodes do not hold a reference to the digitizer.
+    Connect to a device. Same of Node.open().
 
     Example:
     ```
-    # Connect
-    dig = device.Digitizer("dig2://<host>")
-
-    # Do stuff...
-
-    # Disconnect
-    del dig
+    with device.open("dig2://<host>") as dig:
+        # Do stuff here...
     ```
+    @sa Node.open()
+    @param[in] url				URL of device to connect (a string, with format `scheme://[host][/path][?query][#fragment]`)
+    @return						the digitizer node
+    @exception					error.Error in case of error
     """
-
-    url: str
-
-    def __init__(self, url: str):
-        super().__init__(self.__open(url))
-
-        ## URL used for the connection
-        self.url = url
-
-    def __del__(self):
-        """
-        Wrapper to CAEN_FELib_Close()
-
-        @exception					error.Error in case of error
-        """
-        lib.close(self.handle)
-
-    @staticmethod
-    def __open(url: str) -> int:
-        """
-        Wrapper to CAEN_FELib_Open()
-
-        @param[in] url				URL of device to connect (a string, with format `scheme://[host][/path][?query][#fragment]`)
-        @return						root handle
-        @exception					error.Error in case of error
-        """
-        handle = ct.c_uint64()
-        lib.open(_to_bytes(url), handle)
-        return handle.value
+    return Node.open(url)
