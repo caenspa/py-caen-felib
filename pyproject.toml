@@ -1,18 +1,22 @@
 [project]
-name = "py-caen-felib"
-version = "0.0.1"
+name = "caen_felib"
+version = "1.2.2"
 authors = [
 	{ name="Giovanni Cerretani", email="g.cerretani@caen.it" },
+	{ name="Daniele Ninci", email="d.ninci@caen.it" },
 ]
-description = "A small example package"
+description = "Wrapper to CAEN FELib"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
 	"Programming Language :: Python :: 3",
 	"License :: OSI Approved :: LGPLv3",
 	"Operating System :: OS Independent",
 ]
+dependencies = [
+	"numpy>=1.17",
+]
 
 [project.urls]
-"Homepage" = "https://www.caen.it"
-"Bug Tracker" = "https://www.caen.it"
+homepage = "https://www.caen.it"
+documentation = "https://www.caen.it/products/caen-felib-library/"
