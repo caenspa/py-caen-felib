@@ -9,15 +9,14 @@ __license__ = 'LGPLv3+'
 import ctypes as ct
 from enum import Enum
 import json
-from typing import Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
-import numpy.typing as npt
 
 from caen_felib import lib
 
 
-_type_map: Dict[str, npt.DTypeLike] = {
+_type_map: Dict[str, Type] = {
     'U8': ct.c_uint8,
     'U16': ct.c_uint16,
     'U32': ct.c_uint32,
@@ -49,8 +48,8 @@ class _Data:
     dim: int
     shape: List[int]
     dtype: np.dtype
-    value: npt.NDArray # requires NumPy 1.21
-    arg: ct.c_void_p
+    value: np.ndarray
+    arg: Any
 
     # Type aliases
     class _DataField(TypedDict, total=False):
