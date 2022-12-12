@@ -130,13 +130,13 @@ class Node:
     """
 
     handle: int
-    data: Tuple[_Data]
+    data: Tuple[_Data, ...]
 
     def __init__(self, handle):
         ## Handle representing the node on the C library
         self.handle = handle
         ## Endpoint data (inizialized by set_read_data_format())
-        self.data = []
+        self.data = ()
 
     # C API wrappers
 
