@@ -25,14 +25,17 @@ from caen_felib import lib
 # holds a reference to self, and this may introduce subdle memory
 # leaks.
 # Inspired from https://stackoverflow.com/a/68052994/3287591.
-def _lru_cache_self_safe(func, maxsize=128, typed=False):
+def _lru_cache_safe(method, maxsize: int = 128, typed: bool = False):
     """LRU cache decorator that keeps a weak reference to self"""
+
     @lru_cache(maxsize, typed)
-    def _func(_self, *args, **kwargs):
-        return func(_self(), *args, **kwargs)
-    @wraps(func)
+    def cached_method(_self, *args, **kwargs):
+        return method(_self(), *args, **kwargs)
+
+    @wraps(method)
     def inner(self, *args, **kwargs):
-        return _func(ref(self), *args, **kwargs)
+        return cached_method(ref(self), *args, **kwargs)
+
     return inner
 
 
@@ -114,13 +117,19 @@ class _Data:
             # NumPy 2D arrays cannot be directly used because they are
             # implemented as contiguous memory blocks instead of arrays of
             # pointers, used by CAEN_FELib.
-            # To overcome the problem we generate a proxy array of pointers.
+            # To overcome the problem we generate a proxy ndarray of pointers.
             ptr_gen = (v.ctypes.data for v in self.value)
             self.__2d_proxy_value = np.fromiter(ptr_gen, dtype=ct.c_void_p)
             value = self.__2d_proxy_value
         # value.ctypes is equivalent to value.ctypes.data_as(ctypes.c_void_p),
         # that is fine for us.
         return value.ctypes
+
+    def __repr__(self):
+        return f'{__class__.__name__}({self.name}, {self.type})'
+
+    def __str__(self):
+        return self.name
 
 
 class NodeType(Enum):
@@ -181,7 +190,7 @@ class Node:
         """
         lib.close(self.handle)
 
-    @_lru_cache_self_safe
+    @_lru_cache_safe
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6):
         """
         Wrapper to CAEN_FELib_GetChildHandles()
@@ -201,7 +210,7 @@ class Node:
                 return [Node(handle.item()) for handle in child_handles[:res]]
             initial_size = res
 
-    @_lru_cache_self_safe
+    @_lru_cache_safe
     def get_parent_node(self, path: Optional[str] = None):
         """
         Wrapper to CAEN_FELib_GetParentHandle()
@@ -215,7 +224,7 @@ class Node:
         lib.get_parent_handle(self.handle, self.__to_bytes_opt(path), value)
         return Node(value.value)
 
-    @_lru_cache_self_safe
+    @_lru_cache_safe
     def get_node(self, path: Optional[str] = None):
         """
         Wrapper to CAEN_FELib_GetHandle()
@@ -228,7 +237,7 @@ class Node:
         lib.get_handle(self.handle, self.__to_bytes_opt(path), value)
         return Node(value.value)
 
-    @_lru_cache_self_safe
+    @_lru_cache_safe
     def get_path(self) -> str:
         """
         Wrapper to CAEN_FELib_GetPath()
@@ -241,7 +250,7 @@ class Node:
         lib.get_path(self.handle, value)
         return value.value.decode()
 
-    @_lru_cache_self_safe
+    @_lru_cache_safe
     def get_node_properties(self, path: Optional[str] = None) -> Tuple[str, NodeType]:
         """
         Wrapper to CAEN_FELib_GetNodeProperties()

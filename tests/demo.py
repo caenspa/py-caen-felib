@@ -11,13 +11,6 @@ print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 # Connect
 dig = device.connect('dig2://caendgtz-eth-16218.caen.local')
 
-pars = dig.par
-x = pars.numch
-x = dig.par.numch
-x = dig['par/numch']
-x = dig['par']['numch']
-x = dig['ch/0']['par']
-
 # Get board info
 nch = int(dig.par.numch.value)
 
