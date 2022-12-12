@@ -10,7 +10,7 @@ import ctypes as ct
 import ctypes.util as ctutil
 import json
 from sys import platform
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 import caen_felib.error as error
 
@@ -23,6 +23,7 @@ class _Lib:
     """
 
     path: str
+
     open: Callable
     close: Callable
     get_device_tree: Callable
@@ -43,6 +44,7 @@ class _Lib:
     def __init__(self, name: str):
 
         loader: ct.LibraryLoader
+        loader_variadic: ct.LibraryLoader
 
         # Platform dependent stuff
         if platform.startswith('win32'):
@@ -59,7 +61,7 @@ class _Lib:
         ## Library path on the filesystem
         path = ctutil.find_library(name)
         if not path:
-            raise RuntimeError(f'Library {name} not found.')
+            raise RuntimeError(f'Library {name} not found. Please install it and retry.')
 
         # Load library
         self.path = path
@@ -153,7 +155,7 @@ class _Lib:
             raise error.Error(self.last_error, res, func)
         return res
 
-    def __set(self, func, argtypes):
+    def __set(self, func, argtypes: List):
         func.argtypes = argtypes
         func.restype = ct.c_int
         func.errcheck = self.__api_errcheck

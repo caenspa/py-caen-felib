@@ -7,14 +7,33 @@ __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
 __license__ = 'LGPLv3+'
 
 import ctypes as ct
-from dataclasses import dataclass, field
 from enum import Enum
 import json
-from typing import Dict, List, Optional, Tuple, Type, TypedDict
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 import numpy as np
+import numpy.typing as npt
 
 from caen_felib import lib
+
+
+_type_map: Dict[str, npt.DTypeLike] = {
+    'U8': ct.c_uint8,
+    'U16': ct.c_uint16,
+    'U32': ct.c_uint32,
+    'U64': ct.c_uint64,
+    'I8': ct.c_int8,
+    'I16': ct.c_int16,
+    'I32': ct.c_int32,
+    'I64': ct.c_int64,
+    'CHAR': ct.c_char,
+    'BOOL': ct.c_bool,
+    'SIZE_T': ct.c_size_t,
+    # 'PTRDIFF_T' unsupported on Python
+    'FLOAT': ct.c_float,
+    'DOUBLE': ct.c_double,
+    'LONG DOUBLE': ct.c_longdouble,
+}
 
 
 class _Data:
@@ -24,16 +43,23 @@ class _Data:
     in the data format.
     """
 
+    # Public fields
     name: str
     type: str
     dim: int
     shape: List[int]
-    value: np.ndarray
+    dtype: np.dtype
+    value: npt.NDArray # requires NumPy 1.21
     arg: ct.c_void_p
 
-    DataField = TypedDict('DataField', {'name': str, 'type': str, 'dim': int, 'shape': List[int]})
+    # Type aliases
+    class _DataField(TypedDict, total=False):
+        name: str
+        type: str
+        dim: int
+        shape: List[int]
 
-    def __init__(self, data_field: DataField):
+    def __init__(self, data_field: _DataField):
 
         # Default attributes from fields passed to C library
 
@@ -50,51 +76,32 @@ class _Data:
             raise RuntimeError('shape length must match dim')
 
         # Private attributes
-        self.__underlying_type = self.__generate_underlying_type()
         self.__2d_proxy_value = None
 
         # Other public attributes
 
+        ## Data type of value
+        self.dtype = np.dtype(_type_map[self.type])
         ## Instance of `numpy.ndarray` that holds data
-        self.value = np.empty(self.shape, dtype=self.__underlying_type)
-
-        ## Reference to _Data.value that is used within Node.read_data
+        self.value = np.empty(self.shape, dtype=self.dtype)
+        ## ctypes pointer to _Data.value that is used within Node.read_data
         self.arg = self.__generate_arg()
 
-    def __generate_underlying_type(self) -> Type:
-        return {
-            # 'PTRDIFF_T' unsupported on Python
-            'U8': ct.c_uint8,
-            'U16': ct.c_uint16,
-            'U32': ct.c_uint32,
-            'U64': ct.c_uint64,
-            'I8': ct.c_int8,
-            'I16': ct.c_int16,
-            'I32': ct.c_int32,
-            'I64': ct.c_int64,
-            'CHAR': ct.c_char,
-            'BOOL': ct.c_bool,
-            'SIZE_T': ct.c_size_t,
-            'FLOAT': ct.c_float,
-            'DOUBLE': ct.c_double,
-            'LONG DOUBLE': ct.c_longdouble,
-        }[self.type]
-
     def __generate_arg(self):
-        # We use ct.c_void_p for simplicity, instead of more complex types
-        # generated with ct.POINTER, like ct.POINTER(self.__underlying_type).
         if self.dim < 2:
             # NumPy 0D and 1D arrays can be used directly.
-            return self.value.ctypes.data_as(ct.c_void_p)
+            value = self.value
         else:
-            # NumPy 2D arrays cannot be directly used because
-            # they areimplemented as contiguous memory blocks
-            # instead of arrays of pointers that are used by
-            # CAEN_FELib. To overcome the problem we generate
-            # a local array of pointers.
+            # NumPy 2D arrays cannot be directly used because they are
+            # implemented as contiguous memory blocks instead of arrays of
+            # pointers, used by CAEN_FELib.
+            # To overcome the problem we generate a proxy array of pointers.
             ptr_gen = (v.ctypes.data for v in self.value)
             self.__2d_proxy_value = np.fromiter(ptr_gen, dtype=ct.c_void_p)
-            return self.__2d_proxy_value.ctypes.data_as(ct.c_void_p)
+            value = self.__2d_proxy_value
+        # value.ctypes is equivalent to value.ctypes.data_as(ctypes.c_void_p),
+        # that is fine for us.
+        return value.ctypes
 
 
 class NodeType(Enum):
@@ -118,26 +125,19 @@ class NodeType(Enum):
     GROUP = 13
 
 
-@dataclass
 class Node:
     """
     Class representing a node.
     """
 
-    ## Handle representing the node on the C library
     handle: int
+    data: Tuple[_Data]
 
-    ## Endpoint data (inizialized by set_read_data_format())
-    data: List[_Data] = field(default_factory=list)
-
-    # Private utilities
-    @staticmethod
-    def __to_bytes(path: str) -> bytes:
-        return path.encode()
-
-    @staticmethod
-    def __to_bytes_opt(path: Optional[str]) -> Optional[bytes]:
-        return None if path is None else Node.__to_bytes(path)
+    def __init__(self, handle):
+        ## Handle representing the node on the C library
+        self.handle = handle
+        ## Endpoint data (inizialized by set_read_data_format())
+        self.data = []
 
     # C API wrappers
 
@@ -161,7 +161,6 @@ class Node:
         @exception					error.Error in case of error
         """
         lib.close(self.handle)
-        self.handle = -1
 
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6):
         """
@@ -317,7 +316,7 @@ class Node:
         """
         lib.send_command(self.handle, self.__to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[_Data.DataField]) -> None:
+    def set_read_data_format(self, fmt: List[_Data._DataField]) -> None:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
@@ -350,7 +349,7 @@ class Node:
         lib.set_read_data_format(self.handle, json.dumps(fmt).encode())
 
         # Allocate requested fields
-        self.data = [_Data(f) for f in fmt]
+        self.data = *(_Data(f) for f in fmt),
 
         # Important:
         # Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
@@ -397,7 +396,7 @@ class Node:
         @return						data
         @exception					error.Error in case of error
         """
-        lib.read_data(self.handle, timeout, *[d.arg for d in self.data])
+        lib.read_data(self.handle, timeout, *(d.arg for d in self.data))
 
     def has_data(self, timeout: int) -> None:
         """
@@ -444,6 +443,10 @@ class Node:
     def value(self, value: str) -> None:
         self.set_value(None, value)
 
+    def __call__(self):
+        """Execute node"""
+        self.send_command(None)
+
     def __enter__(self):
         return self
 
@@ -454,10 +457,9 @@ class Node:
         return self.get_node(f'/{index}')
 
     def __getattr__(self, name):
+        if name.startswith('__') and name.endswith('__'):
+            raise AttributeError(name)
         return self.__getitem__(name)
-
-    def __iter__(self):
-        yield from self.child_nodes
 
     def __repr__(self):
         return f'{__class__.__name__}({self.path})'
@@ -465,9 +467,15 @@ class Node:
     def __str__(self):
         return self.path
 
-    def __call__(self) -> None:
-        """Execute node"""
-        self.send_command(None)
+    # Private utilities
+
+    @staticmethod
+    def __to_bytes(path: str) -> bytes:
+        return path.encode()
+
+    @staticmethod
+    def __to_bytes_opt(path: Optional[str]) -> Optional[bytes]:
+        return None if path is None else Node.__to_bytes(path)
 
 
 def connect(url: str) -> Node:
@@ -476,7 +484,7 @@ def connect(url: str) -> Node:
 
     Example:
     ```
-    with device.open("dig2://<host>") as dig:
+    with device.connect("dig2://<host>") as dig:
         # Do stuff here...
     ```
     @sa Node.open()
