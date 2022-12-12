@@ -8,12 +8,32 @@ __license__ = 'LGPLv3+'
 
 import ctypes as ct
 from enum import Enum
-import json
+from functools import lru_cache, wraps
+from json import dumps, loads
 from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
+from weakref import ref
 
 import numpy as np
 
 from caen_felib import lib
+
+
+# To be used as decorator on methods that are known to return always
+# the same value. This key feature improves the performances by a
+# factor > 1000.
+# This tweak using weak references is required because @lru_cache
+# holds a reference to self, and this may introduce subdle memory
+# leaks.
+# Inspired from https://stackoverflow.com/a/68052994/3287591.
+def _lru_cache_self_safe(func, maxsize=128, typed=False):
+    """LRU cache decorator that keeps a weak reference to self"""
+    @lru_cache(maxsize, typed)
+    def _func(_self, *args, **kwargs):
+        return func(_self(), *args, **kwargs)
+    @wraps(func)
+    def inner(self, *args, **kwargs):
+        return _func(ref(self), *args, **kwargs)
+    return inner
 
 
 _type_map: Dict[str, Type] = {
@@ -161,6 +181,7 @@ class Node:
         """
         lib.close(self.handle)
 
+    @_lru_cache_self_safe
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6):
         """
         Wrapper to CAEN_FELib_GetChildHandles()
@@ -180,6 +201,7 @@ class Node:
                 return [Node(handle.item()) for handle in child_handles[:res]]
             initial_size = res
 
+    @_lru_cache_self_safe
     def get_parent_node(self, path: Optional[str] = None):
         """
         Wrapper to CAEN_FELib_GetParentHandle()
@@ -193,6 +215,7 @@ class Node:
         lib.get_parent_handle(self.handle, self.__to_bytes_opt(path), value)
         return Node(value.value)
 
+    @_lru_cache_self_safe
     def get_node(self, path: Optional[str] = None):
         """
         Wrapper to CAEN_FELib_GetHandle()
@@ -205,6 +228,7 @@ class Node:
         lib.get_handle(self.handle, self.__to_bytes_opt(path), value)
         return Node(value.value)
 
+    @_lru_cache_self_safe
     def get_path(self) -> str:
         """
         Wrapper to CAEN_FELib_GetPath()
@@ -217,6 +241,7 @@ class Node:
         lib.get_path(self.handle, value)
         return value.value.decode()
 
+    @_lru_cache_self_safe
     def get_node_properties(self, path: Optional[str] = None) -> Tuple[str, NodeType]:
         """
         Wrapper to CAEN_FELib_GetNodeProperties()
@@ -243,7 +268,7 @@ class Node:
             device_tree = ct.create_string_buffer(initial_size)
             res = lib.get_device_tree(self.handle, device_tree, initial_size)
             if res < initial_size:  # equal not fine, see docs
-                return json.loads(device_tree.value.decode())
+                return loads(device_tree.value.decode())
             initial_size = res
 
     def get_value(self, path: Optional[str] = None) -> str:
@@ -345,7 +370,7 @@ class Node:
         @param[in] fmt				JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
         @exception					error.Error in case of error
         """
-        lib.set_read_data_format(self.handle, json.dumps(fmt).encode())
+        lib.set_read_data_format(self.handle, dumps(fmt).encode())
 
         # Allocate requested fields
         self.data = *(_Data(f) for f in fmt),
