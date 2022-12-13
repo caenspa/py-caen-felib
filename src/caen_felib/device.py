@@ -2,7 +2,7 @@
 @ingroup Python
 """
 
-from __future__ import annotations # MyPy not supporting Self
+from __future__ import annotations  # MyPy not supporting Self
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
@@ -14,7 +14,7 @@ from json import dumps, loads
 from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
-#from typing_extensions import Self # MyPy 0.991 not supporting Self, use annotations
+# from typing_extensions import Self # MyPy 0.991 not supporting Self, use annotations
 
 from caen_felib import lib, utils
 

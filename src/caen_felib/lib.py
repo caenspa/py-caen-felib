@@ -58,13 +58,14 @@ class _Lib:
             loader = ct.cdll
             loader_variadic = ct.cdll
 
-        ## Library path on the filesystem
         path = ctutil.find_library(name)
         if not path:
             raise RuntimeError(f'Library {name} not found. Please install it and retry.')
 
-        # Load library
+        ## Library path on the filesystem
         self.path = path
+
+        # Load library
         self.__lib = loader.LoadLibrary(self.path)
         self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
 

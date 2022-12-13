@@ -10,18 +10,19 @@ from functools import lru_cache, wraps
 from typing import Callable, Optional, TypeVar
 from weakref import ref, ReferenceType
 
-from typing_extensions import Concatenate, ParamSpec # Required on Python 3.8
+from typing_extensions import Concatenate, ParamSpec  # Required on Python 3.8
 
 
-_T = TypeVar('_T')
-_Self = TypeVar('_Self')
+_PSelf = TypeVar('_PSelf')
 _P = ParamSpec('_P')
+_T = TypeVar('_T')
+
 
 def lru_cache_method(
-        method: Callable[Concatenate[_Self, _P], _T],
-        maxsize: int = 128,
-        typed: bool = False
-    ) -> Callable[Concatenate[_Self, _P], _T]:
+    method: Callable[Concatenate[_PSelf, _P], _T],
+    maxsize: int = 128,
+    typed: bool = False
+) -> Callable[Concatenate[_PSelf, _P], _T]:
     """
     LRU cache decorator that keeps a weak reference to self.
 
@@ -36,16 +37,16 @@ def lru_cache_method(
     """
 
     @lru_cache(maxsize, typed)
-    def cached_method(_self: ReferenceType[_Self], *args: _P.args, **kwargs: _P.kwargs) -> _T:
-        _cached_self = _self()
-        if _cached_self is None:
-            raise RuntimeError('invalid cache')
-        return method(_cached_self, *args, **kwargs)
+    def cached_method(self_ref: ReferenceType[_PSelf], *args: _P.args, **kwargs: _P.kwargs) -> _T:
+        self = self_ref()
+        # self cannot be null here because this function is called by inner
+        assert self is not None
+        return method(self, *args, **kwargs)
 
     @wraps(method)
-    def inner(self: _Self, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+    def inner(self: _PSelf, *args: _P.args, **kwargs: _P.kwargs) -> _T:
         # Ignore MyPy type checks because of bugs on lru_cache support
-        return cached_method(ref(self), *args, **kwargs) # type: ignore
+        return cached_method(ref(self), *args, **kwargs)  # type: ignore
 
     return inner
 
