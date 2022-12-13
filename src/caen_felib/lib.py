@@ -10,7 +10,7 @@ import ctypes as ct
 import ctypes.util as ctutil
 import json
 from sys import platform
-from typing import Callable, Dict, List
+from typing import Any, Callable, Dict, List, Type
 
 import caen_felib.error as error
 
@@ -41,7 +41,7 @@ class _Lib:
     has_data: Callable
     read_data: Callable
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
 
         loader: ct.LibraryLoader
         loader_variadic: ct.LibraryLoader
@@ -149,13 +149,13 @@ class _Lib:
         self.read_data = self.__lib_variadic.CAEN_FELib_ReadData
         self.__set(self.read_data, [ct.c_uint64, ct.c_int])
 
-    def __api_errcheck(self, res, func, args):
+    def __api_errcheck(self, res: int, func: Callable, args) -> int:
         # res can be positive on GetChildHandles and GetDeviceTree
         if res < 0:
-            raise error.Error(self.last_error, res, func)
+            raise error.Error(self.last_error, res, func.__name__)
         return res
 
-    def __set(self, func, argtypes: List):
+    def __set(self, func: Any, argtypes: List[Type]) -> None:
         func.argtypes = argtypes
         func.restype = ct.c_int
         func.errcheck = self.__api_errcheck
@@ -242,8 +242,8 @@ class _Lib:
         """Get last error"""
         return self.get_last_error()
 
-    def __repr__(self):
-        return f'{__class__.__name__}({self.path})'
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.path})'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.path

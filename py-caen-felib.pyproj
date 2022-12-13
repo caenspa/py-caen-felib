@@ -36,6 +36,9 @@
     <Compile Include="src\caen_felib\device.py" />
     <Compile Include="src\caen_felib\error.py" />
     <Compile Include="src\caen_felib\lib.py" />
+    <Compile Include="src\caen_felib\utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="src\caen_felib\__init__.py" />
     <Compile Include="tests\demo.py" />
   </ItemGroup>
