@@ -7,7 +7,7 @@ __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
 __license__ = 'LGPLv3+'
 
 from functools import lru_cache, wraps
-from typing import Callable, Optional, TypeVar
+from typing import Callable, Optional, TypeVar, overload
 from weakref import ref, ReferenceType
 
 from typing_extensions import Concatenate, ParamSpec  # Required on Python 3.8
@@ -39,13 +39,14 @@ def lru_cache_method(
     @lru_cache(maxsize, typed)
     def cached_method(self_ref: ReferenceType[_PSelf], *args: _P.args, **kwargs: _P.kwargs) -> _T:
         self = self_ref()
-        # self cannot be null here because this function is called by inner
+        # cannot be null here because this function is called by inner()
         assert self is not None
         return method(self, *args, **kwargs)
 
     @wraps(method)
     def inner(self: _PSelf, *args: _P.args, **kwargs: _P.kwargs) -> _T:
-        # Ignore MyPy type checks because of bugs on lru_cache support
+        # Ignore MyPy type checks because of bugs on lru_cache support.
+        # See https://stackoverflow.com/a/73517689/3287591
         return cached_method(ref(self), *args, **kwargs)  # type: ignore
 
     return inner
@@ -54,6 +55,16 @@ def lru_cache_method(
 def to_bytes(path: str) -> bytes:
     """Convert string to bytes"""
     return path.encode()
+
+
+@overload
+def to_bytes_opt(path: None) -> None:
+    ...
+
+
+@overload
+def to_bytes_opt(path: str) -> bytes:
+    ...
 
 
 def to_bytes_opt(path: Optional[str]) -> Optional[bytes]:
