@@ -13,7 +13,6 @@ dig = device.connect('dig2://caendgtz-eth-16218.caen.local')
 
 # Get board info
 nch = int(dig.par.numch.value)
-dig.get_child_nodes()
 
 # Reset
 dig.cmd.reset()

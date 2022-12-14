@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
 import numpy as np
 # from typing_extensions import Self # MyPy 0.991 not supporting Self, use annotations
 
-from caen_felib import lib, utils
+from caen_felib import lib, _utils
 
 
 _type_map: Dict[str, Type] = {
@@ -137,14 +137,28 @@ class Node:
     Class representing a node.
     """
 
+    # Public members
     handle: int
+    root_node: Optional[Node]
+    opened: bool
     data: Tuple[_Data, ...]
 
-    def __init__(self, handle: int) -> None:
+    # Static private members
+    __node_cache_manager: _utils.CacheManager = _utils.CacheManager()
+
+    def __init__(self, handle: int, root_node: Optional[Node]) -> None:
         ## Handle representing the node on the C library
         self.handle = handle
+        ## Root node, set to None on root node (stored to prevent garbage collection)
+        self.root_node = root_node
+        ## Set on instances that requires close() to be called
+        self.opened = root_node is None
         ## Endpoint data (inizialized by set_read_data_format())
         self.data = ()
+
+    def __del__(self) -> None:
+        if self.opened:
+            self.close()
 
     # C API wrappers
 
@@ -158,18 +172,24 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.open(utils.to_bytes(url), value)
-        return cls(value.value)
+        lib.open(_utils.to_bytes(url), value)
+        return cls(value.value, None)
 
     def close(self) -> None:
         """
         Wrapper to CAEN_FELib_Close()
 
+        This will also clear class cache to remove all references
+        to child nodes. It will impact also nodes of other digitizer,
+        but is required to allow garbage collection of unused nodes.
+
         @exception					error.Error in case of error
         """
         lib.close(self.handle)
+        self.opened = False
+        Node.__clear_cache()
 
-    @utils.lru_cache_method
+    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> Tuple[Node, ...]:
         """
         Wrapper to CAEN_FELib_GetChildHandles()
@@ -180,16 +200,16 @@ class Node:
         @return						child nodes (a list)
         @exception					error.Error in case of error
         """
-        b_path = utils.to_bytes_opt(path)
+        b_path = _utils.to_bytes_opt(path)
         while True:
             child_handles = np.empty([initial_size], dtype=ct.c_uint64)
             child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
             res = lib.get_child_handles(self.handle, b_path, child_handles_arg, initial_size)
             if res <= initial_size:
-                return *(Node(handle.item()) for handle in child_handles[:res]),
+                return *(Node(handle.item(), self.__root_node()) for handle in child_handles[:res]),
             initial_size = res
 
-    @utils.lru_cache_method
+    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_parent_node(self, path: Optional[str] = None) -> Node:
         """
         Wrapper to CAEN_FELib_GetParentHandle()
@@ -200,10 +220,10 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.get_parent_handle(self.handle, utils.to_bytes_opt(path), value)
-        return Node(value.value)
+        lib.get_parent_handle(self.handle, _utils.to_bytes_opt(path), value)
+        return Node(value.value, self.__root_node())
 
-    @utils.lru_cache_method
+    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node(self, path: Optional[str] = None) -> Node:
         """
         Wrapper to CAEN_FELib_GetHandle()
@@ -213,10 +233,10 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.c_uint64()
-        lib.get_handle(self.handle, utils.to_bytes_opt(path), value)
-        return Node(value.value)
+        lib.get_handle(self.handle, _utils.to_bytes_opt(path), value)
+        return Node(value.value, self.__root_node())
 
-    @utils.lru_cache_method
+    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_path(self) -> str:
         """
         Wrapper to CAEN_FELib_GetPath()
@@ -229,7 +249,7 @@ class Node:
         lib.get_path(self.handle, value)
         return value.value.decode()
 
-    @utils.lru_cache_method
+    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node_properties(self, path: Optional[str] = None) -> Tuple[str, NodeType]:
         """
         Wrapper to CAEN_FELib_GetNodeProperties()
@@ -241,7 +261,7 @@ class Node:
         """
         name = ct.create_string_buffer(32)
         node_type = ct.c_int()
-        lib.get_node_properties(self.handle, utils.to_bytes_opt(path), name, node_type)
+        lib.get_node_properties(self.handle, _utils.to_bytes_opt(path), name, node_type)
         return name.value.decode(), NodeType(node_type.value)
 
     def get_device_tree(self, initial_size: int = 2**22) -> Dict:
@@ -269,7 +289,7 @@ class Node:
         @exception					error.Error in case of error
         """
         value = ct.create_string_buffer(256)
-        lib.get_value(self.handle, utils.to_bytes_opt(path), value)
+        lib.get_value(self.handle, _utils.to_bytes_opt(path), value)
         return value.value.decode()
 
     def get_value_with_arg(self, path: Optional[str], arg: str) -> str:
@@ -281,8 +301,8 @@ class Node:
         @return						value of the node (a string)
         @exception					error.Error in case of error
         """
-        value = ct.create_string_buffer(utils.to_bytes(arg), 256)
-        lib.get_value(self.handle, utils.to_bytes_opt(path), value)
+        value = ct.create_string_buffer(_utils.to_bytes(arg), 256)
+        lib.get_value(self.handle, _utils.to_bytes_opt(path), value)
         return value.value.decode()
 
     def set_value(self, path: Optional[str], value: str) -> None:
@@ -294,7 +314,7 @@ class Node:
         @param[in] value			value to set (a string)
         @exception					error.Error in case of error
         """
-        lib.set_value(self.handle, utils.to_bytes_opt(path), utils.to_bytes(value))
+        lib.set_value(self.handle, _utils.to_bytes_opt(path), _utils.to_bytes(value))
 
     def get_user_register(self, address: int) -> int:
         """
@@ -326,7 +346,7 @@ class Node:
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
         @exception					error.Error in case of error
         """
-        lib.send_command(self.handle, utils.to_bytes_opt(path))
+        lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
     def set_read_data_format(self, fmt: List[_Data._DataField]) -> None:
         """
@@ -418,6 +438,15 @@ class Node:
         @exception					error.Error in case of error
         """
         lib.has_data(self.handle, timeout)
+
+    # Private utilities
+
+    def __root_node(self) -> Optional[Node]:
+        return self if self.root_node is None else self.root_node
+
+    @staticmethod
+    def __clear_cache() -> None:
+        Node.__node_cache_manager.clear_all()
 
     # Python utilities
 
