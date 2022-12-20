@@ -10,7 +10,7 @@ import ctypes as ct
 import ctypes.util as ctutil
 import json
 from sys import platform
-from typing import Any, Callable, Dict, List, Type
+from typing import Any, Callable, Dict, List, Tuple, Type
 
 import caen_felib.error as error
 
@@ -59,7 +59,7 @@ class _Lib:
             loader_variadic = ct.cdll
 
         path = ctutil.find_library(name)
-        if not path:
+        if path is None:
             raise RuntimeError(f'Library {name} not found. Please install it and retry.')
 
         ## Library path on the filesystem
@@ -138,7 +138,7 @@ class _Lib:
         # Notes:
         # - Remember to manually apply default argument promotions when calling variadic functions;
         #     anyway it is not necessary with ReadData since variadic arguments are always pointers,
-        #     that are not subject to default argument promotion. For more detail, see
+        #     that are not subject to default argument promotion. More details on
         #     https://en.cppreference.com/w/c/language/conversion#Default_argument_promotions
         # - On some platforms, like Apple ARM64, "it is required to specify the argtypes attribute for
         #     the regular, non-variadic, function arguments" (see ctypes documentation); the other
@@ -150,7 +150,7 @@ class _Lib:
         self.read_data = self.__lib_variadic.CAEN_FELib_ReadData
         self.__set(self.read_data, [ct.c_uint64, ct.c_int])
 
-    def __api_errcheck(self, res: int, func: Callable, args) -> int:
+    def __api_errcheck(self, res: int, func: Callable, args: Tuple) -> int:
         # res can be positive on GetChildHandles and GetDeviceTree
         if res < 0:
             raise error.Error(self.last_error, res, func.__name__)

@@ -14,12 +14,22 @@ from typing_extensions import Concatenate, ParamSpec  # Required on Python 3.8
 
 
 class CacheManager(List[_lru_cache_wrapper]):
+    """
+    A simple list of functions returned by lru_cache decorator.
+
+    To be used with the optional parameter cache_manager of lru_cache_method(),
+    that will store a reference to the cached function inside this list.
+    This is a typing-safe way to call cache_clear and cache_info of the
+    internal cached functions, even if not exposed directly by the inner
+    function returned by lru_cache_method().
+    """
     def clear_all(self) -> None:
+        """Invoke cache_clear on all functions in the list"""
         for wrapper in self:
             wrapper.cache_clear()
 
 
-_PSelf = TypeVar('_PSelf')
+_S = TypeVar('_S')
 _P = ParamSpec('_P')
 _T = TypeVar('_T')
 
@@ -28,7 +38,7 @@ def lru_cache_method(
     cache_manager: Optional[CacheManager] = None,
     maxsize: int = 128,
     typed: bool = False,
-) -> Callable[[Callable[Concatenate[_PSelf, _P], _T]], Callable[Concatenate[_PSelf, _P], _T]]:
+) -> Callable[[Callable[Concatenate[_S, _P], _T]], Callable[Concatenate[_S, _P], _T]]:
     """
     LRU cache decorator that keeps a weak reference to self.
 
@@ -42,21 +52,23 @@ def lru_cache_method(
     @sa https://stackoverflow.com/a/68052994/3287591
     """
 
-    def wrapper(method: Callable[Concatenate[_PSelf, _P], _T]) -> Callable[Concatenate[_PSelf, _P], _T]:
+    def wrapper(method: Callable[Concatenate[_S, _P], _T]) -> Callable[Concatenate[_S, _P], _T]:
 
         @lru_cache(maxsize, typed)
-        def cached_method(self_ref: ReferenceType[_PSelf], *args: _P.args, **kwargs: _P.kwargs) -> _T:
-            self = self_ref()
-            # cannot be null here because this function is called by inner()
-            assert self is not None
-            return method(self, *args, **kwargs)
+        def cached_method(self_ref: ReferenceType[_S], *args: _P.args, **kwargs: _P.kwargs) -> _T:
+            if self := self_ref():
+                return method(self, *args, **kwargs)
+            # self cannot be None: this function is always called by inner()
+            assert False, 'unreachable'
 
         @wraps(method)
-        def inner(self: _PSelf, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+        def inner(self: _S, *args: _P.args, **kwargs: _P.kwargs) -> _T:
             # Ignore MyPy type checks because of bugs on lru_cache support.
             # See https://stackoverflow.com/a/73517689/3287591.
             return cached_method(ref(self), *args, **kwargs)  # type: ignore
 
+        # Optionally store a reference to lru_cache decorated function to
+        # simplify cache management. See CacheManager documentation.
         if cache_manager is not None:
             cache_manager.append(cached_method)
 

@@ -10,16 +10,19 @@ __license__ = 'LGPLv3+'
 
 import ctypes as ct
 from enum import Enum
+from functools import wraps
 from json import dumps, loads
 from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
-# from typing_extensions import Self # MyPy 0.991 not supporting Self, use annotations
+# import numpy.typing as npt  # numpy.typing.DTypeLike requires numpy >= 1.20
+# from typing_extensions import Self  # MyPy 0.991 not supporting Self, use annotations
 
 from caen_felib import lib, _utils
 
 
-_type_map: Dict[str, Type] = {
+_type_map: Dict[str, Type[ct._SimpleCData]] = {
+    # Type[ct._SimpleCData] could be replaced by numpy.typing.DTypeLike
     'U8': ct.c_uint8,
     'U16': ct.c_uint16,
     'U32': ct.c_uint32,
@@ -167,6 +170,13 @@ class Node:
         """
         Wrapper to CAEN_FELib_Open()
 
+        Example:
+        ```
+        with device.connect("dig2://<host>") as dig:
+            # Do stuff here...
+        ```
+
+        @sa device.connect()
         @param[in] url				URL of device to connect (a string, with format `scheme://[host][/path][?query][#fragment]`)
         @return						the digitizer node
         @exception					error.Error in case of error
@@ -206,7 +216,7 @@ class Node:
             child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
             res = lib.get_child_handles(self.handle, b_path, child_handles_arg, initial_size)
             if res <= initial_size:
-                return *(Node(handle.item(), self.__root_node()) for handle in child_handles[:res]),
+                return tuple(Node(handle.item(), self.__root_node()) for handle in child_handles[:res])
             initial_size = res
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
@@ -511,18 +521,6 @@ class Node:
         return self.path
 
 
+@wraps(Node.open)
 def connect(url: str) -> Node:
-    """
-    Connect to a device. Same of Node.open().
-
-    Example:
-    ```
-    with device.connect("dig2://<host>") as dig:
-        # Do stuff here...
-    ```
-    @sa Node.open()
-    @param[in] url				URL of device to connect (a string, with format `scheme://[host][/path][?query][#fragment]`)
-    @return						the digitizer node
-    @exception					error.Error in case of error
-    """
     return Node.open(url)
