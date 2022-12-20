@@ -43,6 +43,9 @@
     <Compile Include="tests\demo.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".gitlab-ci.yml">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="pyproject.toml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
