@@ -56,8 +56,7 @@ def lru_cache_method(
 
         @lru_cache(maxsize, typed)
         def cached_method(self_ref: ReferenceType[_S], *args: _P.args, **kwargs: _P.kwargs) -> _T:
-            self = self_ref()
-            if self is not None:
+            if self := self_ref():
                 return method(self, *args, **kwargs)
             # self cannot be None: this function is always called by inner()
             assert False, 'unreachable'
