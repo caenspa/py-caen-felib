@@ -383,6 +383,7 @@ class Node:
         ```
 
         @param[in] fmt				JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
+        @return						Tuple of _Data with allocated buffers of specified dim and shape, to be passed as second argument of read_data()
         @exception					error.Error in case of error
         """
         lib.set_read_data_format(self.handle, dumps(fmt).encode())
@@ -432,7 +433,7 @@ class Node:
         ```
 
         @param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
-        @return						data
+        @param[out] data			A tuple of _Data with requested data fields. The one returned by set_data_format() fits perfectly.
         @exception					error.Error in case of error
         """
         lib.read_data(self.handle, timeout, *(d.arg for d in data))
