@@ -144,7 +144,6 @@ class Node:
     handle: int
     root_node: Optional[Node]
     opened: bool
-    data: Tuple[_Data, ...]
 
     # Static private members
     __node_cache_manager: _utils.CacheManager = _utils.CacheManager()
@@ -156,8 +155,6 @@ class Node:
         self.root_node = root_node
         ## Set on instances that requires close() to be called
         self.opened = root_node is None
-        ## Endpoint data (inizialized by set_read_data_format())
-        self.data = ()
 
     def __del__(self) -> None:
         if self.opened:
@@ -358,7 +355,7 @@ class Node:
         """
         lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[_Data._DataField]) -> None:
+    def set_read_data_format(self, fmt: List[_Data._DataField]) -> Tuple[_Data, ...]:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
@@ -390,17 +387,17 @@ class Node:
         """
         lib.set_read_data_format(self.handle, dumps(fmt).encode())
 
-        # Allocate requested fields
-        self.data = *(_Data(f) for f in fmt),
-
         # Important:
         # Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
         # is shared with all other endpoints and it would not be thread safe.
         # More details on a comment on the caen_felib.lib constructor.
-        # Possible unsafe code could be:
+        # Possible unsafe code could be something like:
         # lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
 
-    def read_data(self, timeout: int) -> None:
+        # Allocate requested fields
+        return tuple(_Data(f) for f in fmt)
+
+    def read_data(self, timeout: int, data: Tuple[_Data, ...]) -> None:
         """
         Wrapper to CAEN_FELib_ReadData()
 
@@ -438,7 +435,7 @@ class Node:
         @return						data
         @exception					error.Error in case of error
         """
-        lib.read_data(self.handle, timeout, *(d.arg for d in self.data))
+        lib.read_data(self.handle, timeout, *(d.arg for d in data))
 
     def has_data(self, timeout: int) -> None:
         """
@@ -451,7 +448,7 @@ class Node:
 
     # Private utilities
 
-    def __root_node(self) -> Optional[Node]:
+    def __root_node(self) -> Node:
         return self if self.root_node is None else self.root_node
 
     @staticmethod
