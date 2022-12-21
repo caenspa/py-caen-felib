@@ -25,6 +25,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="doc\" />
     <Folder Include="src\" />
     <Folder Include="src\caen_felib\" />
     <Folder Include="tests\" />
@@ -46,6 +47,8 @@
     <Content Include=".gitlab-ci.yml">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="CHANGELOG" />
+    <Content Include="doc\CHANGELOG.md" />
     <Content Include="pyproject.toml" />
     <Content Include="README.md" />
   </ItemGroup>
