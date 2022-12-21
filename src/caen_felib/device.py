@@ -516,6 +516,12 @@ class Node:
             raise AttributeError(name)
         return self.__getitem__(name)
 
+    def __eq__(self, other: Node) -> bool:
+        return self.handle == other.handle
+
+    def __hash__(self):
+        return hash(self.handle)
+
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.path})'
 
