@@ -3,6 +3,7 @@ A Python wrapper to CAEN FELib.
 
 ## Install
 Just run
+
     pip install caen-felib --extra-index-url https://__token__:<your_personal_token>@gitlab.caen.it/api/v4/projects/489/packages/pypi/simple
 
 ## Documentation
