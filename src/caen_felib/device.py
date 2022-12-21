@@ -519,7 +519,7 @@ class Node:
     def __eq__(self, other: Node) -> bool:
         return self.handle == other.handle
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.handle)
 
     def __repr__(self) -> str:
