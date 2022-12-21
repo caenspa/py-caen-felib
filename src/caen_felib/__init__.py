@@ -3,10 +3,6 @@
 @brief Python wrapper
 
 @pre This module requires CAEN FELib libraries to be installed in the system.
-
-Latest version of this module can be installed using pip:
-
-    pip install caen_felib
 """
 
 __author__ = 'Giovanni Cerretani'
