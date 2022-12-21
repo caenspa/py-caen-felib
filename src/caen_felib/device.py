@@ -12,7 +12,7 @@ import ctypes as ct
 from enum import Enum
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
+from typing import Any, Dict, Generator, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
 # import numpy.typing as npt  # numpy.typing.DTypeLike requires numpy >= 1.20
@@ -503,6 +503,10 @@ class Node:
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         """Called when exiting from `with` block"""
         self.close()
+
+    def __iter__(self) -> Generator[Node, None, None]:
+        """Utility to simlify node browsing"""
+        yield from self.child_nodes
 
     def __getitem__(self, index: Any) -> Node:
         return self.get_node(f'/{index}')
