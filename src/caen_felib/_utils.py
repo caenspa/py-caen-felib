@@ -15,7 +15,7 @@ from typing_extensions import Concatenate, ParamSpec  # Required on Python 3.8
 
 class CacheManager(List[_lru_cache_wrapper]):
     """
-    A simple list of functions returned by lru_cache decorator.
+    A simple list of functions returned by `@lru_cache` decorator.
 
     To be used with the optional parameter cache_manager of lru_cache_method(),
     that will store a reference to the cached function inside this list.
