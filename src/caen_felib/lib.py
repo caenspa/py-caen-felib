@@ -62,7 +62,14 @@ class _Lib:
 
         path = ctutil.find_library(name)
         if path is None:
-            raise RuntimeError(f'Library {name} not found. Please install it and retry.')
+            raise RuntimeError(
+                f'Library {name} not found. '
+                'This module requires the latest version of '
+                'CAEN FE Library to be installed on your system. '
+                'You may find the official installers at '
+                'https://www.caen.it/products/caen-felib-library/. '
+                'Please install it and retry.'
+            )
 
         ## Library path on the filesystem
         self.path = path

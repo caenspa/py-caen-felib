@@ -17,11 +17,11 @@ class CacheManager(List[_lru_cache_wrapper]):
     """
     A simple list of functions returned by `@lru_cache` decorator.
 
-    To be used with the optional parameter @p cache_manager of lru_cache_method(),
-    that will store a reference to the cached function inside this list.
-    This is a typing-safe way to call `cache_clear` and cache_info of the
-    internal cached functions, even if not exposed directly by the inner
-    function returned by lru_cache_method().
+    To be used with the optional parameter @p cache_manager of
+    lru_cache_method(), that will store a reference to the cached function
+    inside this list. This is a typing-safe way to call `cache_clear` and
+    `cache_info` of the internal cached functions, even if not exposed
+    directly by the inner function returned by lru_cache_method().
     """
     def clear_all(self) -> None:
         """Invoke `cache_clear` on all functions in the list"""

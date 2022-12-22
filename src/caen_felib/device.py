@@ -516,7 +516,9 @@ class Node:
             raise AttributeError(name)
         return self.__getitem__(name)
 
-    def __eq__(self, other: Node) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Node):
+            return NotImplemented
         return self.handle == other.handle
 
     def __hash__(self) -> int:
