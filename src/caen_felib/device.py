@@ -428,7 +428,8 @@ class Node:
                     raise ex
 
             # Do stuff with data
-            print(data_0)
+            for field in data:
+                print(field.value)
 
         dig.cmd.disarmacquisition()
         ```
