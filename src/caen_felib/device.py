@@ -2,7 +2,7 @@
 @ingroup Python
 """
 
-from __future__ import annotations  # MyPy not supporting Self
+from __future__ import annotations  # MyPy 0.991 not supporting Self :(
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
@@ -12,13 +12,17 @@ import ctypes as ct
 from enum import Enum
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Dict, List, Optional, Tuple, Type, TypedDict
+from typing import Any, Dict, Generator, List, Optional, Tuple, Type
 
 import numpy as np
-# import numpy.typing as npt  # numpy.typing.DTypeLike requires numpy >= 1.20
-# from typing_extensions import Self  # MyPy 0.991 not supporting Self, use annotations
+from typing_extensions import TypedDict
 
 from caen_felib import lib, _utils
+
+# Comments on imports:
+# - TypedDict moved to typing on Python 3.8
+# - numpy.typing.typing.DTypeLike could be useful but requires numpy >= 1.20
+# - typing_extensions.Self not supported by MyPy 0.991, using annotations
 
 
 _type_map: Dict[str, Type[ct._SimpleCData]] = {
@@ -144,7 +148,6 @@ class Node:
     handle: int
     root_node: Optional[Node]
     opened: bool
-    data: Tuple[_Data, ...]
 
     # Static private members
     __node_cache_manager: _utils.CacheManager = _utils.CacheManager()
@@ -156,8 +159,6 @@ class Node:
         self.root_node = root_node
         ## Set on instances that requires close() to be called
         self.opened = root_node is None
-        ## Endpoint data (inizialized by set_read_data_format())
-        self.data = ()
 
     def __del__(self) -> None:
         if self.opened:
@@ -358,7 +359,7 @@ class Node:
         """
         lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[_Data._DataField]) -> None:
+    def set_read_data_format(self, fmt: List[_Data._DataField]) -> Tuple[_Data, ...]:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
@@ -386,21 +387,22 @@ class Node:
         ```
 
         @param[in] fmt				JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
+        @return						Tuple of _Data with allocated buffers of specified dim and shape, to be passed as second argument of read_data()
         @exception					error.Error in case of error
         """
         lib.set_read_data_format(self.handle, dumps(fmt).encode())
-
-        # Allocate requested fields
-        self.data = *(_Data(f) for f in fmt),
 
         # Important:
         # Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
         # is shared with all other endpoints and it would not be thread safe.
         # More details on a comment on the caen_felib.lib constructor.
-        # Possible unsafe code could be:
+        # Possible unsafe code could be something like:
         # lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
 
-    def read_data(self, timeout: int) -> None:
+        # Allocate requested fields
+        return tuple(_Data(f) for f in fmt)
+
+    def read_data(self, timeout: int, data: Tuple[_Data, ...]) -> None:
         """
         Wrapper to CAEN_FELib_ReadData()
 
@@ -435,10 +437,10 @@ class Node:
         ```
 
         @param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
-        @return						data
+        @param[out] data			A tuple of _Data with requested data fields. The one returned by set_data_format() fits perfectly.
         @exception					error.Error in case of error
         """
-        lib.read_data(self.handle, timeout, *(d.arg for d in self.data))
+        lib.read_data(self.handle, timeout, *(d.arg for d in data))
 
     def has_data(self, timeout: int) -> None:
         """
@@ -451,7 +453,7 @@ class Node:
 
     # Private utilities
 
-    def __root_node(self) -> Optional[Node]:
+    def __root_node(self) -> Node:
         return self if self.root_node is None else self.root_node
 
     @staticmethod
@@ -506,6 +508,10 @@ class Node:
         """Called when exiting from `with` block"""
         self.close()
 
+    def __iter__(self) -> Generator[Node, None, None]:
+        """Utility to simlify node browsing"""
+        yield from self.child_nodes
+
     def __getitem__(self, index: Any) -> Node:
         return self.get_node(f'/{index}')
 
@@ -513,6 +519,14 @@ class Node:
         if name.startswith('__') and name.endswith('__'):
             raise AttributeError(name)
         return self.__getitem__(name)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Node):
+            return NotImplemented
+        return self.handle == other.handle
+
+    def __hash__(self) -> int:
+        return hash(self.handle)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.path})'
@@ -523,4 +537,5 @@ class Node:
 
 @wraps(Node.open)
 def connect(url: str) -> Node:
+    """Wrapper to Node.open"""
     return Node.open(url)

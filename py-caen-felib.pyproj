@@ -25,6 +25,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="doc\" />
     <Folder Include="src\" />
     <Folder Include="src\caen_felib\" />
     <Folder Include="tests\" />
@@ -46,7 +47,10 @@
     <Content Include=".gitlab-ci.yml">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="CHANGELOG" />
+    <Content Include="doc\CHANGELOG.md" />
     <Content Include="pyproject.toml" />
+    <Content Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -11,8 +11,12 @@ import ctypes.util as ctutil
 import json
 from sys import platform
 from typing import Any, Callable, Dict, List, Tuple, Type
+from typing_extensions import TypeAlias
 
-import caen_felib.error as error
+from caen_felib import error
+
+# Comments on imports:
+# - TypeAlias moved to typing on Python 3.10
 
 
 class _Lib:
@@ -22,24 +26,26 @@ class _Lib:
     using ctypes.
     """
 
+    APIType: TypeAlias = Callable[..., int]
+
     path: str
 
-    open: Callable
-    close: Callable
-    get_device_tree: Callable
-    get_child_handles: Callable
-    get_parent_handle: Callable
-    get_handle: Callable
-    get_path: Callable
-    get_node_properties: Callable
-    get_value: Callable
-    set_value: Callable
-    get_user_register: Callable
-    set_user_register: Callable
-    send_command: Callable
-    set_read_data_format: Callable
-    has_data: Callable
-    read_data: Callable
+    open: APIType
+    close: APIType
+    get_device_tree: APIType
+    get_child_handles: APIType
+    get_parent_handle: APIType
+    get_handle: APIType
+    get_path: APIType
+    get_node_properties: APIType
+    get_value: APIType
+    set_value: APIType
+    get_user_register: APIType
+    set_user_register: APIType
+    send_command: APIType
+    set_read_data_format: APIType
+    has_data: APIType
+    read_data: APIType
 
     def __init__(self, name: str) -> None:
 
@@ -60,7 +66,14 @@ class _Lib:
 
         path = ctutil.find_library(name)
         if path is None:
-            raise RuntimeError(f'Library {name} not found. Please install it and retry.')
+            raise RuntimeError(
+                f'Library {name} not found. '
+                'This module requires the latest version of '
+                'CAEN FE Library to be installed on your system. '
+                'You may find the official installers at '
+                'https://www.caen.it/products/caen-felib-library/. '
+                'Please install it and retry.'
+            )
 
         ## Library path on the filesystem
         self.path = path
@@ -69,6 +82,9 @@ class _Lib:
         self.__lib = loader.LoadLibrary(self.path)
         self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
 
+        self.__load_api()
+
+    def __load_api(self) -> None:
         # Load API not related to devices
         self.__get_lib_info = self.__lib.CAEN_FELib_GetLibInfo
         self.__set(self.__get_lib_info, [ct.c_char_p, ct.c_size_t])
@@ -150,7 +166,7 @@ class _Lib:
         self.read_data = self.__lib_variadic.CAEN_FELib_ReadData
         self.__set(self.read_data, [ct.c_uint64, ct.c_int])
 
-    def __api_errcheck(self, res: int, func: Callable, args: Tuple) -> int:
+    def __api_errcheck(self, res: int, func: Callable, _: Tuple) -> int:
         # res can be positive on GetChildHandles and GetDeviceTree
         if res < 0:
             raise error.Error(self.last_error, res, func.__name__)

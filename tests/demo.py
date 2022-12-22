@@ -62,7 +62,7 @@ data_format = [
 	},
 ]
 
-ep_scope.set_read_data_format(data_format)
+data = ep_scope.set_read_data_format(data_format)
 
 # Configure plot
 plt.ion()
@@ -75,10 +75,10 @@ ax.set_xlim(0, reclen - 1)
 ax.set_ylim(0, 2 ** 14 - 1)
 
 # Initialize data
-event_size = ep_scope.data[0].value
-timestamp = ep_scope.data[1].value
-waveform = ep_scope.data[2].value
-waveform_size = ep_scope.data[3].value
+event_size = data[0].value
+timestamp = data[1].value
+waveform = data[2].value
+waveform_size = data[3].value
 
 # Start acquisition
 dig.send_command('/cmd/armacquisition')
@@ -87,7 +87,7 @@ dig.send_command('/cmd/swstartacquisition')
 while True:
 
 	try:
-		ep_scope.read_data(100)
+		ep_scope.read_data(100, data)
 	except error.Error as ex:
 		if ex.code == error.ErrorCode.TIMEOUT:
 			continue
