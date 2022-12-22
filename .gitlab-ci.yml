@@ -1,5 +1,22 @@
 stages:
+  - test
   - deploy
+
+test-mypy:
+  image: python:3.8
+  stage: test
+  when: manual
+  script:
+    - pip install mypy --quiet
+    - mypy src
+
+test-pylint:
+  image: python:3.8
+  stage: test
+  when: manual
+  script:
+    - pip install pylint --quiet
+    - pylint src
 
 pypi-upload:
   image: python:3.8
@@ -7,6 +24,6 @@ pypi-upload:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - pip install build twine
+    - pip install build twine --quiet
     - python -m build
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
