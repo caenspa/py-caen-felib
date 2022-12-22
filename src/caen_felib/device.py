@@ -537,4 +537,5 @@ class Node:
 
 @wraps(Node.open)
 def connect(url: str) -> Node:
+    """Wrapper to Node.open"""
     return Node.open(url)

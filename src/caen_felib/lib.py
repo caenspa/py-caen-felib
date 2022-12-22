@@ -13,7 +13,7 @@ from sys import platform
 from typing import Any, Callable, Dict, List, Tuple, Type
 from typing_extensions import TypeAlias
 
-import caen_felib.error as error
+from caen_felib import error
 
 # Comments on imports:
 # - TypeAlias moved to typing on Python 3.10
@@ -82,6 +82,9 @@ class _Lib:
         self.__lib = loader.LoadLibrary(self.path)
         self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
 
+        self.__load_api()
+
+    def __load_api(self) -> None:
         # Load API not related to devices
         self.__get_lib_info = self.__lib.CAEN_FELib_GetLibInfo
         self.__set(self.__get_lib_info, [ct.c_char_p, ct.c_size_t])
