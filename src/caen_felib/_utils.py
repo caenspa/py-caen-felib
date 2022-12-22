@@ -4,7 +4,7 @@
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
-__license__ = 'LGPLv3+'
+__license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
 from functools import lru_cache, wraps, _lru_cache_wrapper
 from typing import Callable, List, Optional, TypeVar, overload

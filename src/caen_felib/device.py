@@ -6,7 +6,7 @@ from __future__ import annotations  # MyPy 0.991 not supporting Self :(
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
-__license__ = 'LGPLv3+'
+__license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
 import ctypes as ct
 from enum import Enum
@@ -382,8 +382,8 @@ class Node:
                 'shape': [nch, reclen],
             },
         ]
-        ep_node.set_read_data_format(format)
-        print(ep_node.data[0])
+        data = ep_node.set_read_data_format(format)
+        print(data[0])
         ```
 
         @param[in] fmt				JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
@@ -412,16 +412,13 @@ class Node:
 
         Example:
         ```
-        # Get reference to data
-        data_0 = ep_node.data[0].value
-
         # Start acquisition
         dig.cmd.armacquisition()
         dig.cmd.swstartacquisition()
 
         while True:
             try:
-                ep_node.read_data(100)
+                ep_node.read_data(100, data)
             except error.Error as ex:
                 if ex.code == error.ErrorCode.Timeout:
                     continue

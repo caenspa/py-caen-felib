@@ -4,11 +4,11 @@
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
-__license__ = 'LGPLv3+'
+__license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
 import ctypes as ct
 import ctypes.util as ctutil
-import json
+from json import loads
 from sys import platform
 from typing import Any, Callable, Dict, List, Tuple, Type
 from typing_extensions import TypeAlias
@@ -48,7 +48,10 @@ class _Lib:
     read_data: APIType
 
     def __init__(self, name: str) -> None:
+        self.__load_lib(name)
+        self.__load_api()
 
+    def __load_lib(self, name: str) -> None:
         loader: ct.LibraryLoader
         loader_variadic: ct.LibraryLoader
 
@@ -81,8 +84,6 @@ class _Lib:
         # Load library
         self.__lib = loader.LoadLibrary(self.path)
         self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
-
-        self.__load_api()
 
     def __load_api(self) -> None:
         # Load API not related to devices
@@ -191,7 +192,7 @@ class _Lib:
             lib_info = ct.create_string_buffer(initial_size)
             res = self.__get_lib_info(lib_info, initial_size)
             if res < initial_size:  # equal not fine, see docs
-                return json.loads(lib_info.value.decode())
+                return loads(lib_info.value.decode())
             initial_size = res
 
     def get_lib_version(self) -> str:
