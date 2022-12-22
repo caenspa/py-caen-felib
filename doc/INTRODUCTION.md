@@ -17,7 +17,7 @@ The official releases of this module can be found on the CAEN website,
 at https://www.caen.it/products/caen-felib-library/.
 
 # Language
-It requires Python >= 3.8. Type hints are supported.
+It requires Python >= 3.7. Type hints are supported.
 
 # Changelog
 See @ref PYCHANGELOG.

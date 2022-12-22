@@ -12,13 +12,17 @@ import ctypes as ct
 from enum import Enum
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Dict, Generator, List, Optional, Tuple, Type, TypedDict
+from typing import Any, Dict, Generator, List, Optional, Tuple, Type
 
 import numpy as np
-# import numpy.typing as npt  # numpy.typing.DTypeLike requires numpy >= 1.20
-# from typing_extensions import Self  # MyPy 0.991 not supporting Self, using annotations
+from typing_extensions import TypedDict
 
 from caen_felib import lib, _utils
+
+# Comments on imports:
+# - TypedDict moved to typing on Python 3.8
+# - numpy.typing.typing.DTypeLike could be useful but requires numpy >= 1.20
+# - typing_extensions.Self not supported by MyPy 0.991, using annotations
 
 
 _type_map: Dict[str, Type[ct._SimpleCData]] = {

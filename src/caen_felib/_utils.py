@@ -10,7 +10,11 @@ from functools import lru_cache, wraps, _lru_cache_wrapper
 from typing import Callable, List, Optional, TypeVar, overload
 from weakref import ref, ReferenceType
 
-from typing_extensions import Concatenate, ParamSpec  # Required on Python 3.8
+from typing_extensions import Concatenate, ParamSpec
+
+# Comments on imports:
+# - ReferenceType is not subscriptable on Python <= 3.8
+# - Concatenate and ParamSpec moved to typing on Python 3.10
 
 
 class CacheManager(List[_lru_cache_wrapper]):
@@ -55,8 +59,10 @@ def lru_cache_method(
     def wrapper(method: Callable[Concatenate[_S, _P], _T]) -> Callable[Concatenate[_S, _P], _T]:
 
         @lru_cache(maxsize, typed)
-        def cached_method(self_ref: ReferenceType[_S], *args: _P.args, **kwargs: _P.kwargs) -> _T:
-            if self := self_ref():
+        # ReferenceType is not subscriptable on Python <= 3.8
+        def cached_method(self_ref: ReferenceType, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+            self = self_ref()
+            if self is not None:
                 return method(self, *args, **kwargs)
             # self cannot be None: this function is always called by inner()
             assert False, 'unreachable'

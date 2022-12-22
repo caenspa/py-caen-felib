@@ -10,9 +10,13 @@ import ctypes as ct
 import ctypes.util as ctutil
 import json
 from sys import platform
-from typing import Any, Callable, Dict, List, Tuple, Type, TypeAlias
+from typing import Any, Callable, Dict, List, Tuple, Type
+from typing_extensions import TypeAlias
 
 import caen_felib.error as error
+
+# Comments on imports:
+# - TypeAlias moved to typing on Python 3.10
 
 
 class _Lib:
