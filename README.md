@@ -2,10 +2,16 @@
 A Python wrapper to CAEN FELib.
 
 ## Install
-Just run
+You need to install both the latest version of CAEN FELib and an implementation like the CAEN Dig2 from [the CAEN website](https://www.caen.it/products/caen-felib-library/).
 
-    pip install caen-felib --extra-index-url https://__token__:<your_personal_token>@gitlab.caen.it/api/v4/projects/489/packages/pypi/simple
+Then, install this module and have fun.
+
+## Examples
+Coming soon. Few examples may be found on the official documentation and in the function docstrings.
 
 ## Documentation
-Python API is described on the same documentation provided with the C library,
-available at https://www.caen.it/products/caen-felib-library/.
+Python API is described on the CAEN FELib library documentation, starting from CAEN FELib v1.2.3.
+
+## References
+Requirements and documentation can be found at 
+https://www.caen.it/products/caen-felib-library/.
