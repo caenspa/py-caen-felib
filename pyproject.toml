@@ -8,9 +8,19 @@ description = "Wrapper to CAEN FELib"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
-	"Programming Language :: Python :: 3",
-	"License :: OSI Approved :: LGPLv3",
+	"Development Status :: 4 - Beta",
+	"Intended Audience :: Science/Research",
+	"License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+	"Natural Language :: English",
 	"Operating System :: OS Independent",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Topic :: Scientific/Engineering :: Physics",
+	"Typing :: Typed",
 ]
 dependencies = [
 	"numpy>=1.19",
