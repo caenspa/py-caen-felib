@@ -7,7 +7,7 @@ This is the official Python wrapper for the CAEN FELib.
 # Installation
 Latest version of this module can be installed using pip:
 
-    pip install caen_felib
+    pip install caen-felib
 
 # Development
 Public methods are documented on section @ref Python.
