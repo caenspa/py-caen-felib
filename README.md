@@ -72,7 +72,7 @@ with device.connect("dig2://<host>") as dig:
     dig.endpoint.scope.read_data(-1, data)
 
     # Stop acquisition
-    dig.cmd.DisarmAcquisiton()
+    dig.cmd.DisarmAcquisition()
 
     # Plot waveforms
     for i in range(nch):

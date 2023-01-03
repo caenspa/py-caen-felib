@@ -11,11 +11,18 @@
 -----------------------------------------------------------------------------
 
 
+v1.0.4 (03/01/2023)
+-------------------
+
+Fixes:
+- Example on README.md fixed
+
+
 v1.0.3 (03/01/2023)
 -------------------
 
 Fixes:
-- Fix README.md after upload to pypi.org
+- README.md and pyproject.toml improved
 
 
 v1.0.2 (02/01/2023)
