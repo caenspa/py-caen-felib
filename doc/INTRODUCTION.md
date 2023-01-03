@@ -2,7 +2,7 @@
 @tableofcontents
 
 # Description
-This is just a Pythonic wrapper to CAEN FELib.
+This is the official Python wrapper for the CAEN FELib.
 
 # Installation
 Latest version of this module can be installed using pip:

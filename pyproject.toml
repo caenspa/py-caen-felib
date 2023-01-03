@@ -4,7 +4,7 @@ authors = [
 	{ name="Giovanni Cerretani", email="g.cerretani@caen.it" },
 	{ name="Daniele Ninci", email="d.ninci@caen.it" },
 ]
-description = "Wrapper to CAEN FELib"
+description = "Official Python wrapper for CAEN FELib"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
