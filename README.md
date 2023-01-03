@@ -21,9 +21,13 @@ with device.connect("dig2://<host>") as dig:
     # Reset
     dig.cmd.Reset()
 
+    # Configuration parameters
+    nch = int(dig.par.NumCh.value)
+    reclen = 4096
+
     # Set some digitizer parameters
     dig.par.AcqTriggerSource.value = 'SwTrg'
-    dig.par.RecordLengthS.value = f'{4096}'
+    dig.par.RecordLengthS.value = f'{reclen}'
     dig.par.PreTriggerS.value = f'{128}'
 
     # Set some channel parameters
@@ -34,9 +38,6 @@ with device.connect("dig2://<host>") as dig:
     dig.endpoint.par.ActiveEndpoint.value = 'scope'
 
     # Configure endpoint
-    nch = int(dig.par.NumCh.value)
-    reclen = int(dig.par.RecordLengthS.value)
-
     data_format = [
         {
             'name': 'TIMESTAMP',
