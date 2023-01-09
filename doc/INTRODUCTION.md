@@ -20,7 +20,7 @@ It requires Python >= 3.7. Type hints are supported.
 See @ref PYCHANGELOG.
 
 # Copyright notice
-Copyright &copy; 2020-2022 CAEN SpA
+Copyright &copy; 2020-2023 CAEN SpA
 
 The caen_felib module is free software; you can redistribute it and/or
 modify it under the terms of the **GNU Lesser General Public

@@ -5,7 +5,7 @@
 from __future__ import annotations  # MyPy 0.991 not supporting Self :(
 
 __author__ = 'Giovanni Cerretani'
-__copyright__ = 'Copyright (C) 2020-2022 CAEN SpA'
+__copyright__ = 'Copyright (C) 2020-2023 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
 import ctypes as ct
