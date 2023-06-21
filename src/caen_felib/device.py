@@ -505,7 +505,7 @@ class Node:
         self.close()
 
     def __iter__(self) -> Generator[Self, None, None]:
-        """Utility to simlify node browsing"""
+        """Utility to simplify node browsing"""
         yield from self.child_nodes
 
     def __getitem__(self, index: Any) -> Self:
