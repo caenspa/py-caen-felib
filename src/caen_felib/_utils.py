@@ -50,7 +50,7 @@ def lru_cache_method(
     the same value. This can improve the performances of some methods
     by a factor > 1000.
     This wrapper using weak references is required: functools.lru_cache
-    holds a reference to all arguments: using directly on the methos it
+    holds a reference to all arguments: using directly on the methods it
     would hold a reference to self, introducing subdle memory leaks.
 
     @sa https://stackoverflow.com/a/68052994/3287591
