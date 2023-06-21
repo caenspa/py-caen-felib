@@ -7,7 +7,7 @@ test-mypy:
   stage: test
   when: manual
   script:
-    - pip install mypy --quiet
+    - pip install mypy numpy typing-extensions --quiet
     - mypy src
 
 test-pylint:
@@ -15,7 +15,7 @@ test-pylint:
   stage: test
   when: manual
   script:
-    - pip install pylint --quiet
+    - pip install pylint numpy typing-extensions --quiet
     - pylint src
 
 pypi-upload:

@@ -6,30 +6,12 @@ import timeit
 
 from caen_felib import lib, device, error
 
-x = np.random.rand(3)
-m = np.mean(x)
-v = np.var(x, ddof=1)
-
-m_c = 0.
-v_c = 0.
-for i in x:
-	m_c = m_c + i
-	v_c = v_c + (i*i)
-
-my_m = m_c / x.size
-my_v = (v_c - x.size * (my_m * my_m)) / (x.size - 1)
-
-m_diff = my_m - m
-v_diff = my_v - v
-
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
-dig = device.connect('dig2://10.105.250.7/usb?link_num=0')
+dig = device.connect('dig2://10.105.250.7')
 
 # Reset
-dig.cmd.thermalshutdown()
-dig.cmd.reboot()
 dig.cmd.reset()
 
 # Get board info
