@@ -2,8 +2,6 @@
 @ingroup Python
 """
 
-from __future__ import annotations  # MyPy 0.991 not supporting Self :(
-
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2023 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
@@ -15,14 +13,14 @@ from json import dumps, loads
 from typing import Any, Dict, Generator, List, Optional, Tuple, Type
 
 import numpy as np
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, Self
 
 from caen_felib import lib, _utils
 
 # Comments on imports:
 # - TypedDict moved to typing on Python 3.8
+# - Self moved to typing on Python 3.11
 # - numpy.typing.typing.DTypeLike could be useful but requires numpy >= 1.20
-# - typing_extensions.Self not supported by MyPy 0.991, using annotations
 
 
 _type_map: Dict[str, Type[ct._SimpleCData]] = {
@@ -146,13 +144,13 @@ class Node:
 
     # Public members
     handle: int
-    root_node: Optional[Node]
+    root_node: Optional[Self]
     opened: bool
 
     # Static private members
     __node_cache_manager: _utils.CacheManager = _utils.CacheManager()
 
-    def __init__(self, handle: int, root_node: Optional[Node]) -> None:
+    def __init__(self, handle: int, root_node: Optional[Self]) -> None:
         ## Handle representing the node on the C library
         self.handle = handle
         ## Root node, set to None on root node (stored to prevent garbage collection)
@@ -167,7 +165,7 @@ class Node:
     # C API wrappers
 
     @classmethod
-    def open(cls: Type[Node], url: str) -> Node:
+    def open(cls: Type[Self], url: str) -> Self:
         """
         Wrapper to CAEN_FELib_Open()
 
@@ -201,7 +199,7 @@ class Node:
         Node.__clear_cache()
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
-    def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> Tuple[Node, ...]:
+    def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> Tuple[Self, ...]:
         """
         Wrapper to CAEN_FELib_GetChildHandles()
 
@@ -217,11 +215,11 @@ class Node:
             child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
             res = lib.get_child_handles(self.handle, b_path, child_handles_arg, initial_size)
             if res <= initial_size:
-                return tuple(Node(handle.item(), self.__root_node()) for handle in child_handles[:res])
+                return tuple(type(self)(handle.item(), self.__root_node()) for handle in child_handles[:res])
             initial_size = res
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
-    def get_parent_node(self, path: Optional[str] = None) -> Node:
+    def get_parent_node(self, path: Optional[str] = None) -> Self:
         """
         Wrapper to CAEN_FELib_GetParentHandle()
 
@@ -232,10 +230,10 @@ class Node:
         """
         value = ct.c_uint64()
         lib.get_parent_handle(self.handle, _utils.to_bytes_opt(path), value)
-        return Node(value.value, self.__root_node())
+        return type(self)(value.value, self.__root_node())
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
-    def get_node(self, path: Optional[str] = None) -> Node:
+    def get_node(self, path: Optional[str] = None) -> Self:
         """
         Wrapper to CAEN_FELib_GetHandle()
 
@@ -245,7 +243,7 @@ class Node:
         """
         value = ct.c_uint64()
         lib.get_handle(self.handle, _utils.to_bytes_opt(path), value)
-        return Node(value.value, self.__root_node())
+        return type(self)(value.value, self.__root_node())
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_path(self) -> str:
@@ -451,7 +449,7 @@ class Node:
 
     # Private utilities
 
-    def __root_node(self) -> Node:
+    def __root_node(self) -> Self:
         return self if self.root_node is None else self.root_node
 
     @staticmethod
@@ -476,12 +474,12 @@ class Node:
         return self.get_path()
 
     @property
-    def parent_node(self) -> Node:
+    def parent_node(self) -> Self:
         """Parent node"""
         return self.get_parent_node(None)
 
     @property
-    def child_nodes(self) -> Tuple[Node, ...]:
+    def child_nodes(self) -> Tuple[Self, ...]:
         """List of child nodes"""
         return self.get_child_nodes(None)
 
@@ -498,7 +496,7 @@ class Node:
         """Execute node"""
         self.send_command(None)
 
-    def __enter__(self) -> Node:
+    def __enter__(self) -> Self:
         """Used by `with`"""
         return self
 
@@ -506,14 +504,14 @@ class Node:
         """Called when exiting from `with` block"""
         self.close()
 
-    def __iter__(self) -> Generator[Node, None, None]:
+    def __iter__(self) -> Generator[Self, None, None]:
         """Utility to simlify node browsing"""
         yield from self.child_nodes
 
-    def __getitem__(self, index: Any) -> Node:
+    def __getitem__(self, index: Any) -> Self:
         return self.get_node(f'/{index}')
 
-    def __getattr__(self, name: str) -> Node:
+    def __getattr__(self, name: str) -> Self:
         if name.startswith('__') and name.endswith('__'):
             raise AttributeError(name)
         return self.__getitem__(name)
