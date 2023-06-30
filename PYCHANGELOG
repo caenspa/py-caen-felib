@@ -11,6 +11,15 @@
 -----------------------------------------------------------------------------
 
 
+v1.0.5 (30/06/2023)
+-------------------
+
+Fixes:
+- Remove 'from __future__ import annotations' since Mypy supports
+    Self (currently imported from typing_extensions) since 1.0
+- Documentation and packaging improved
+
+
 v1.0.4 (03/01/2023)
 -------------------
 
@@ -42,4 +51,4 @@ Fixes:
 v1.0.0 (22/12/2022)
 -------------------
 
-First public release.
+First public release

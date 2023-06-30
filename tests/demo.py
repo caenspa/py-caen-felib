@@ -9,18 +9,18 @@ from caen_felib import lib, device, error
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 # Connect
-dig = device.connect('dig2://caendgtz-eth-16218.caen.local')
-
-# Get board info
-nch = int(dig.par.numch.value)
+dig = device.connect('dig2://10.105.250.7')
 
 # Reset
 dig.cmd.reset()
 
-# Configure digitizer
-reclen = 102400
+# Get board info
+nch = int(dig.par.numch.value)
 
-dig.set_value('/par/TestPulsePeriod', '1000')
+# Configure digitizer
+reclen = 4096
+
+dig.set_value('/par/TestPulsePeriod', '1000000000')
 dig.set_value('/par/TestPulseWidth', '16')
 dig.set_value('/par/AcqTriggerSource', 'TestPulse|ITLA')
 dig.set_value('/par/RecordLengthS', f'{reclen}')
@@ -33,7 +33,7 @@ dig.set_value('/ch/0/par/TriggerThrMode', 'Absolute')
 dig.set_value('/ch/0/par/SelfTriggerEdge', 'Fall')
 
 for i in range(nch):
-	dig.set_value(f'/ch/{i}/par/DCOffset', f'{0 + i}')
+	dig.set_value(f'/ch/{i}/par/DCOffset', f'{50 + i}')
 	dig.set_value(f'/ch/{i}/par/WaveDataSource', 'adc_data')
 
 dig.set_value('/endpoint/par/activeendpoint', 'scope')

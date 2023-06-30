@@ -5,16 +5,13 @@
 This is the official Python wrapper for the CAEN FELib.
 
 # Installation
-Latest version of this module can be installed using pip:
+Latest version of this module can found on [pypi.org](https://pypi.org/project/caen-felib/)
+and can be installed using pip:
 
-    pip install caen_felib
+    pip install caen-felib
 
 # Development
 Public methods are documented on section @ref Python.
-
-# Website
-The official releases of this module can be found on the CAEN website,
-at https://www.caen.it/products/caen-felib-library/.
 
 # Language
 It requires Python >= 3.7. Type hints are supported.
@@ -23,7 +20,7 @@ It requires Python >= 3.7. Type hints are supported.
 See @ref PYCHANGELOG.
 
 # Copyright notice
-Copyright &copy; 2020-2022 CAEN SpA
+Copyright &copy; 2020-2023 CAEN SpA
 
 The caen_felib module is free software; you can redistribute it and/or
 modify it under the terms of the **GNU Lesser General Public
@@ -42,5 +39,4 @@ with the caen_felib module:
 
 The license applies to the caen_felib module source as a whole, though
 individual source files can have a different license which is required to be
-compatible with the GNU Lesser General Public Library, version 3. You may find
-more details on the @ref credits section of this file.
+compatible with the GNU Lesser General Public Library, version 3.
