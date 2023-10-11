@@ -6,10 +6,10 @@ __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2020-2023 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
-from enum import Enum
+from enum import IntEnum
 
 
-class ErrorCode(Enum):
+class ErrorCode(IntEnum):
     """
     Wrapper to ::CAEN_FELib_ErrorCode
     """
