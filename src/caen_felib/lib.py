@@ -10,7 +10,7 @@ import ctypes as ct
 import ctypes.util as ctutil
 from json import loads
 from sys import platform
-from typing import Any, Callable, Dict, List, Tuple, Type
+from typing import Callable, Dict, List, Tuple, Type
 from typing_extensions import TypeAlias
 
 from caen_felib import error
@@ -87,69 +87,29 @@ class _Lib:
 
     def __load_api(self) -> None:
         # Load API not related to devices
-        self.__get_lib_info = self.__lib.CAEN_FELib_GetLibInfo
-        self.__set(self.__get_lib_info, [ct.c_char_p, ct.c_size_t])
-
-        self.__get_lib_version = self.__lib.CAEN_FELib_GetLibVersion
-        self.__set(self.__get_lib_version, [ct.c_char_p])
-
-        self.__get_error_name = self.__lib.CAEN_FELib_GetErrorName
-        self.__set(self.__get_error_name, [ct.c_int, ct.c_char_p])
-
-        self.__get_error_description = self.__lib.CAEN_FELib_GetErrorDescription
-        self.__set(self.__get_error_description, [ct.c_int, ct.c_char_p])
-
-        self.__get_last_error = self.__lib.CAEN_FELib_GetLastError
-        self.__set(self.__get_last_error, [ct.c_char_p])
-
-        self.__devices_discovery = self.__lib.CAEN_FELib_DevicesDiscovery
-        self.__set(self.__devices_discovery, [ct.c_char_p, ct.c_size_t, ct.c_int])
+        self.__get_lib_info = self.__get('GetLibInfo', [ct.c_char_p, ct.c_size_t])
+        self.__get_lib_version = self.__get('GetLibVersion', [ct.c_char_p])
+        self.__get_error_name = self.__get('GetErrorName', [ct.c_int, ct.c_char_p])
+        self.__get_error_description = self.__get('GetErrorDescription', [ct.c_int, ct.c_char_p])
+        self.__get_last_error = self.__get('GetLastError', [ct.c_char_p])
+        self.__devices_discovery = self.__get('DevicesDiscovery', [ct.c_char_p, ct.c_size_t, ct.c_int])
 
         # Load API
-        self.open = self.__lib.CAEN_FELib_Open
-        self.__set(self.open, [ct.c_char_p, ct.POINTER(ct.c_uint64)])
-
-        self.close = self.__lib.CAEN_FELib_Close
-        self.__set(self.close, [ct.c_uint64])
-
-        self.get_device_tree = self.__lib.CAEN_FELib_GetDeviceTree
-        self.__set(self.get_device_tree, [ct.c_uint64, ct.c_char_p, ct.c_size_t])
-
-        self.get_child_handles = self.__lib.CAEN_FELib_GetChildHandles
-        self.__set(self.get_child_handles, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64), ct.c_size_t])
-
-        self.get_parent_handle = self.__lib.CAEN_FELib_GetParentHandle
-        self.__set(self.get_parent_handle, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
-
-        self.get_handle = self.__lib.CAEN_FELib_GetHandle
-        self.__set(self.get_handle, [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
-
-        self.get_path = self.__lib.CAEN_FELib_GetPath
-        self.__set(self.get_path, [ct.c_uint64, ct.c_char_p])
-
-        self.get_node_properties = self.__lib.CAEN_FELib_GetNodeProperties
-        self.__set(self.get_node_properties, [ct.c_uint64, ct.c_char_p, ct.c_char_p, ct.POINTER(ct.c_int)])
-
-        self.get_value = self.__lib.CAEN_FELib_GetValue
-        self.__set(self.get_value, [ct.c_uint64, ct.c_char_p, ct.c_char_p])
-
-        self.set_value = self.__lib.CAEN_FELib_SetValue
-        self.__set(self.set_value, [ct.c_uint64, ct.c_char_p, ct.c_char_p])
-
-        self.get_user_register = self.__lib.CAEN_FELib_GetUserRegister
-        self.__set(self.get_user_register, [ct.c_uint64, ct.c_uint32, ct.POINTER(ct.c_uint32)])
-
-        self.set_user_register = self.__lib.CAEN_FELib_SetUserRegister
-        self.__set(self.set_user_register, [ct.c_uint64, ct.c_uint32, ct.c_uint32])
-
-        self.send_command = self.__lib.CAEN_FELib_SendCommand
-        self.__set(self.send_command, [ct.c_uint64, ct.c_char_p])
-
-        self.set_read_data_format = self.__lib.CAEN_FELib_SetReadDataFormat
-        self.__set(self.set_read_data_format, [ct.c_uint64, ct.c_char_p])
-
-        self.has_data = self.__lib.CAEN_FELib_HasData
-        self.__set(self.has_data, [ct.c_uint64, ct.c_int])
+        self.open = self.__get('Open', [ct.c_char_p, ct.POINTER(ct.c_uint64)])
+        self.close = self.__get('Close', [ct.c_uint64])
+        self.get_device_tree = self.__get('GetDeviceTree', [ct.c_uint64, ct.c_char_p, ct.c_size_t])
+        self.get_child_handles = self.__get('GetChildHandles', [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64), ct.c_size_t])
+        self.get_parent_handle = self.__get('GetParentHandle', [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
+        self.get_handle = self.__get('GetHandle', [ct.c_uint64, ct.c_char_p, ct.POINTER(ct.c_uint64)])
+        self.get_path = self.__get('GetPath', [ct.c_uint64, ct.c_char_p])
+        self.get_node_properties = self.__get('GetNodeProperties', [ct.c_uint64, ct.c_char_p, ct.c_char_p, ct.POINTER(ct.c_int)])
+        self.get_value = self.__get('GetValue', [ct.c_uint64, ct.c_char_p, ct.c_char_p])
+        self.set_value = self.__get('SetValue', [ct.c_uint64, ct.c_char_p, ct.c_char_p])
+        self.get_user_register = self.__get('GetUserRegister', [ct.c_uint64, ct.c_uint32, ct.POINTER(ct.c_uint32)])
+        self.set_user_register = self.__get('SetUserRegister', [ct.c_uint64, ct.c_uint32, ct.c_uint32])
+        self.send_command = self.__get('SendCommand', [ct.c_uint64, ct.c_char_p])
+        self.set_read_data_format = self.__get('SetReadDataFormat', [ct.c_uint64, ct.c_char_p])
+        self.has_data = self.__get('HasData', [ct.c_uint64, ct.c_int])
 
         # Load variadic API
         # Notes:
@@ -164,8 +124,7 @@ class _Lib:
         #     different signatures, so arguments (always pointers in this case) must be placed without
         #     relying on ctypes automatic conversions with from_param methods. For more details, see
         #     https://stackoverflow.com/q/74630617/3287591
-        self.read_data = self.__lib_variadic.CAEN_FELib_ReadData
-        self.__set(self.read_data, [ct.c_uint64, ct.c_int])
+        self.read_data = self.__get('ReadData', [ct.c_uint64, ct.c_int], True)
 
     def __api_errcheck(self, res: int, func: Callable, _: Tuple) -> int:
         # res can be positive on GetChildHandles and GetDeviceTree
@@ -173,10 +132,13 @@ class _Lib:
             raise error.Error(self.last_error, res, func.__name__)
         return res
 
-    def __set(self, func: Any, argtypes: List[Type]) -> None:
+    def __get(self, name: str, argtypes: List[Type], variadic: bool = False) -> Callable[..., int]:
+        lib = self.__lib if not variadic else self.__lib_variadic
+        func = getattr(lib, f'CAEN_FELib_{name}')
         func.argtypes = argtypes
         func.restype = ct.c_int
         func.errcheck = self.__api_errcheck
+        return func
 
     # C API wrappers
 
