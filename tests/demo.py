@@ -1,8 +1,5 @@
-import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
-import timeit
 
 from caen_felib import lib, device, error
 

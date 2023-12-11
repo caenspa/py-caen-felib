@@ -3,11 +3,11 @@
 """
 
 __author__ = 'Giovanni Cerretani'
-__copyright__ = 'Copyright (C) 2020-2023 CAEN SpA'
+__copyright__ = 'Copyright (C) 2023 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
 import ctypes as ct
-from enum import Enum
+from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
 from typing import Any, Dict, Generator, List, Optional, Tuple, Type
@@ -23,8 +23,8 @@ from caen_felib import lib, _utils
 # - numpy.typing.typing.DTypeLike could be useful but requires numpy >= 1.20
 
 
-_type_map: Dict[str, Type[ct._SimpleCData]] = {
-    # Type[ct._SimpleCData] could be replaced by numpy.typing.DTypeLike
+_type_map: Dict[str, Type] = {
+    # Generic Type could be replaced by numpy.typing.DTypeLike
     'U8': ct.c_uint8,
     'U16': ct.c_uint16,
     'U32': ct.c_uint32,
@@ -116,7 +116,8 @@ class _Data:
         return self.name
 
 
-class NodeType(Enum):
+@unique
+class NodeType(IntEnum):
     """
     Wrapper to ::CAEN_FELib_NodeType_t
     """
@@ -197,6 +198,18 @@ class Node:
         lib.close(self.handle)
         self.opened = False
         Node.__clear_cache()
+
+    def get_impl_lib_version(self) -> str:
+        """
+        Wrapper to CAEN_FELib_GetImplLibVersion()
+
+        @sa version
+        @return						version (a string)
+        @exception					error.Error in case of error
+        """
+        value = ct.create_string_buffer(16)
+        lib.get_impl_lib_version(self.handle, value)
+        return value.value.decode()
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> Tuple[Self, ...]:
