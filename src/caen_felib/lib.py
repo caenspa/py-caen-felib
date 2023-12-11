@@ -10,7 +10,7 @@ import ctypes as ct
 import ctypes.util as ctutil
 from json import loads
 from sys import platform
-from typing import Callable, Dict, List, Tuple, Type
+from typing import Callable, Dict, Tuple, Type
 from typing_extensions import TypeAlias
 
 from caen_felib import error
@@ -154,7 +154,7 @@ class _Lib:
     @staticmethod
     def __ver_tuple(version: str) -> Tuple[int, ...]:
         return tuple(map(int, version.split('.')))
-    
+
     def __ver_at_least(self, target: Tuple[int, ...]) -> bool:
         ver = self.get_lib_version()
         return self.__ver_tuple(ver) >= target
