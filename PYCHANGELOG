@@ -11,6 +11,15 @@
 -----------------------------------------------------------------------------
 
 
+v1.1.0 (11/12/2023)
+-------------------
+
+New features:
+- Add support for CAEN_FELib_GetImplLibVersion
+- Improved example in README, implementing an acquisition loop
+- ErrorCode now inherits from IntEnum to simplify conversion to integers
+
+
 v1.0.5 (30/06/2023)
 -------------------
 
