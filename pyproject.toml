@@ -1,8 +1,8 @@
 [project]
 name = "caen_felib"
 authors = [
-	{ name="Giovanni Cerretani", email="g.cerretani@caen.it" },
-	{ name="Daniele Ninci", email="d.ninci@caen.it" },
+	{ name="Giovanni Cerretani" },
+	{ name="Daniele Ninci" },
 ]
 description = "Official Python wrapper for the CAEN FELib."
 readme = "README.md"
@@ -14,7 +14,6 @@ classifiers = [
 	"Natural Language :: English",
 	"Operating System :: OS Independent",
 	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
@@ -24,7 +23,7 @@ classifiers = [
 	"Typing :: Typed",
 ]
 dependencies = [
-	"numpy>=1.19",
+	"numpy>=1.20",
 	"typing-extensions>=4.0.0",
 ]
 dynamic = ["version"]
@@ -33,5 +32,6 @@ dynamic = ["version"]
 version = {attr = "caen_felib.__version__"}
 
 [project.urls]
-homepage = "https://www.caen.it"
-documentation = "https://www.caen.it/products/caen-felib-library/"
+Homepage = "https://www.caen.it"
+Documentation = "https://www.caen.it/products/caen-felib-library/"
+Support = "https://www.caen.it/mycaen/support/"

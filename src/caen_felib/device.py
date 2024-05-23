@@ -13,6 +13,7 @@ from json import dumps, loads
 from typing import Any, Dict, Generator, List, Optional, Tuple, Type
 
 import numpy as np
+import numpy.typing as npt
 from typing_extensions import TypedDict, Self
 
 from caen_felib import lib, _utils
@@ -20,11 +21,10 @@ from caen_felib import lib, _utils
 # Comments on imports:
 # - TypedDict moved to typing on Python 3.8
 # - Self moved to typing on Python 3.11
-# - numpy.typing.typing.DTypeLike could be useful but requires numpy >= 1.20
+# - numpy.typing.DTypeLike requires numpy >= 1.20
 
 
-_type_map: Dict[str, Type] = {
-    # Generic Type could be replaced by numpy.typing.DTypeLike
+_type_map: Dict[str, npt.DTypeLike] = {
     'U8': ct.c_uint8,
     'U16': ct.c_uint16,
     'U32': ct.c_uint32,
