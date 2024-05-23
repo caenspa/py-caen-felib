@@ -9,7 +9,7 @@ __license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 import ctypes as ct
 import ctypes.util as ctutil
 from json import loads
-from sys import platform
+import sys
 from typing import Callable, Dict, Tuple, Type
 from typing_extensions import TypeAlias
 
@@ -58,7 +58,7 @@ class _Lib:
         loader_variadic: ct.LibraryLoader
 
         # Platform dependent stuff
-        if platform.startswith('win32'):
+        if sys.platform == 'win32':
             # API functions are declared as __stdcall, but variadic
             # functions are __cdecl even if declared as __stdcall.
             # This difference applies only to 32 bit applications,
