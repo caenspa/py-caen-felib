@@ -1,8 +1,8 @@
 [project]
 name = "caen_felib"
 authors = [
-	{ name="Giovanni Cerretani", email="g.cerretani@caen.it" },
-	{ name="Daniele Ninci", email="d.ninci@caen.it" },
+	{ name="Giovanni Cerretani" },
+	{ name="Daniele Ninci" },
 ]
 description = "Official Python wrapper for the CAEN FELib."
 readme = "README.md"
@@ -33,5 +33,6 @@ dynamic = ["version"]
 version = {attr = "caen_felib.__version__"}
 
 [project.urls]
-homepage = "https://www.caen.it"
-documentation = "https://www.caen.it/products/caen-felib-library/"
+Homepage = "https://www.caen.it"
+Documentation = "https://www.caen.it/products/caen-felib-library/"
+Support = "https://www.caen.it/mycaen/support/"
