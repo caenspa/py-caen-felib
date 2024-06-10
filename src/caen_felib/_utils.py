@@ -6,8 +6,10 @@ __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2023 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
 
+import ctypes as ct
 from functools import lru_cache, wraps, _lru_cache_wrapper
-from typing import Callable, List, Optional, TypeVar, overload
+import sys
+from typing import Any, Callable, List, Optional, TypeVar, overload
 from weakref import ref, ReferenceType
 
 from typing_extensions import Concatenate, ParamSpec
@@ -15,6 +17,73 @@ from typing_extensions import Concatenate, ParamSpec
 # Comments on imports:
 # - ReferenceType is not subscriptable on Python <= 3.8
 # - Concatenate and ParamSpec moved to typing on Python 3.10
+
+
+class Lib:
+    """
+    This class loads the shared library and
+    exposes its functions on its public attributes
+    using ctypes.
+    """
+
+    def __init__(self, name: str) -> None:
+        self.__name = name
+        self.__load_lib()
+
+    def __load_lib(self) -> None:
+        loader: ct.LibraryLoader
+        loader_variadic: ct.LibraryLoader
+
+        # Platform dependent stuff
+        if sys.platform == 'win32':
+            # API functions are declared as __stdcall, but variadic
+            # functions are __cdecl even if declared as __stdcall.
+            # This difference applies only to 32 bit applications,
+            # 64 bit applications have its own calling convention.
+            loader = ct.windll
+            loader_variadic = ct.cdll
+            path = f'{self.name}.dll'
+        else:
+            loader = ct.cdll
+            loader_variadic = ct.cdll
+            path = f'lib{self.name}.so'
+
+        ## Library path on the filesystem
+        self.__path = path
+
+        # Load library
+        try:
+            self.__lib = loader.LoadLibrary(path)
+            self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
+        except FileNotFoundError as ex:
+            raise RuntimeError(
+                f'Library {self.name} not found. '
+                'This module requires the latest version of '
+                'the library to be installed on your system. '
+                'You may find the official installers at '
+                'https://www.caen.it/. '
+                'Please install it and retry.'
+            ) from ex
+
+    @property
+    def name(self) -> str:
+        """Name of the shared library"""
+        return self.__name
+
+    @property
+    def path(self) -> Any:
+        """Path of the shared library"""
+        return self.__path
+
+    @property
+    def lib(self) -> Any:
+        """ctypes object to shared library"""
+        return self.__lib
+
+    @property
+    def lib_variadic(self) -> Any:
+        """ctypes object to shared library (for variadic functions)"""
+        return self.__lib_variadic
 
 
 class CacheManager(List[_lru_cache_wrapper]):
@@ -81,6 +150,31 @@ def lru_cache_method(
         return inner
 
     return wrapper
+
+
+def lru_cache_clear(
+    cache_manager: CacheManager,
+) -> Callable[[Callable[Concatenate[_S, _P], _T]], Callable[Concatenate[_S, _P], _T]]:
+    """
+    LRU cache decorator that clear cache.
+
+    To be used as decorator on methods that are known to invalidate
+    the cache.
+    """
+
+    def wrapper(method: Callable[Concatenate[_S, _P], _T]) -> Callable[Concatenate[_S, _P], _T]:
+
+        @wraps(method)
+        def inner(self: _S, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+            # Ignore MyPy type checks because of bugs on lru_cache support.
+            # See https://stackoverflow.com/a/73517689/3287591.
+            cache_manager.clear_all()
+            return method(ref(self), *args, **kwargs)  # type: ignore
+
+        return inner
+
+    return wrapper
+
 
 
 def to_bytes(path: str) -> bytes:
