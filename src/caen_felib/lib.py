@@ -26,23 +26,6 @@ class _Lib(_utils.Lib):
 
     APIType: TypeAlias = Callable[..., int]
 
-    open: APIType
-    close: APIType
-    get_device_tree: APIType
-    get_child_handles: APIType
-    get_parent_handle: APIType
-    get_handle: APIType
-    get_path: APIType
-    get_node_properties: APIType
-    get_value: APIType
-    set_value: APIType
-    get_user_register: APIType
-    set_user_register: APIType
-    send_command: APIType
-    set_read_data_format: APIType
-    has_data: APIType
-    read_data: APIType
-
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self.__load_api()
@@ -111,13 +94,9 @@ class _Lib(_utils.Lib):
         func.errcheck = self.__api_errcheck
         return func
 
-    @staticmethod
-    def __ver_tuple(version: str) -> Tuple[int, ...]:
-        return tuple(map(int, version.split('.')))
-
     def __ver_at_least(self, target: Tuple[int, ...]) -> bool:
         ver = self.get_lib_version()
-        return self.__ver_tuple(ver) >= target
+        return _utils.version_to_tuple(ver) >= target
 
     # C API wrappers
 
@@ -200,9 +179,3 @@ class _Lib(_utils.Lib):
     def last_error(self) -> str:
         """Get last error"""
         return self.get_last_error()
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.path})'
-
-    def __str__(self) -> str:
-        return self.path
