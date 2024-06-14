@@ -185,6 +185,7 @@ class Node:
         lib.open(_utils.to_bytes(url), value)
         return cls(value.value, None)
 
+    @_utils.lru_cache_clear(cache_manager=__node_cache_manager)
     def close(self) -> None:
         """
         Wrapper to CAEN_FELib_Close()
@@ -197,7 +198,6 @@ class Node:
         """
         lib.close(self.handle)
         self.opened = False
-        Node.__clear_cache()
 
     def get_impl_lib_version(self) -> str:
         """
@@ -464,10 +464,6 @@ class Node:
 
     def __root_node(self) -> Self:
         return self if self.root_node is None else self.root_node
-
-    @staticmethod
-    def __clear_cache() -> None:
-        Node.__node_cache_manager.clear_all()
 
     # Python utilities
 
