@@ -446,7 +446,7 @@ class Node:
         ```
 
         @param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
-        @param[out] data			A tuple of _Data with requested data fields. The one returned by set_data_format() fits perfectly.
+        @param[out] data			The object returned by set_read_data_format().
         @exception					error.Error in case of error
         """
         lib.read_data(self.handle, timeout, *(d.arg for d in data))
