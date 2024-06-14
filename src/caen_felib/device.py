@@ -370,7 +370,7 @@ class Node:
         """
         lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[_Data._DataField]) -> Tuple[_Data, ...]:
+    def set_read_data_format(self, fmt: List[Dict[str, Any]]) -> Tuple[_Data, ...]:
         """
         Wrapper to CAEN_FELib_SetReadDataFormat()
 
