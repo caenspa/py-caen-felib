@@ -12,7 +12,7 @@ from enum import IntEnum, unique
 @unique
 class ErrorCode(IntEnum):
     """
-    Wrapper to ::CAEN_FELib_ErrorCode
+    Binding of ::CAEN_FELib_ErrorCode
     """
     SUCCESS = 0
     GENERIC_ERROR = -1

@@ -98,11 +98,11 @@ class _Lib(_utils.Lib):
         ver = self.get_lib_version()
         return _utils.version_to_tuple(ver) >= target
 
-    # C API wrappers
+    # C API bindings
 
     def get_lib_info(self, initial_size: int = 2**22) -> Dict:
         """
-        Wrapper to CAEN_FELib_GetLibInfo()
+        Binding of CAEN_FELib_GetLibInfo()
 
         @sa info
         @param[in] initial_size		initial size to be allocated for the first iteration
@@ -117,7 +117,7 @@ class _Lib(_utils.Lib):
 
     def get_lib_version(self) -> str:
         """
-        Wrapper to CAEN_FELib_GetLibVersion()
+        Binding of CAEN_FELib_GetLibVersion()
 
         @sa version
         @return						version (a string)
@@ -129,7 +129,7 @@ class _Lib(_utils.Lib):
 
     def get_error_name(self, error_code: int) -> str:
         """
-        Wrapper to CAEN_FELib_GetErrorName()
+        Binding of CAEN_FELib_GetErrorName()
 
         @param[in] error_code		error code returned by library functions
         @return						error name (a string)
@@ -141,7 +141,7 @@ class _Lib(_utils.Lib):
 
     def get_error_description(self, error_code: int) -> str:
         """
-        Wrapper to CAEN_FELib_GetErrorDescription()
+        Binding of CAEN_FELib_GetErrorDescription()
 
         @param[in] error_code		error code returned by library functions
         @return						error description (a string)
@@ -153,7 +153,7 @@ class _Lib(_utils.Lib):
 
     def get_last_error(self) -> str:
         """
-        Wrapper to CAEN_FELib_GetLastError()
+        Binding of CAEN_FELib_GetLastError()
 
         @sa last_error
         @return						last error description (a string)

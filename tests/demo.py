@@ -3,7 +3,7 @@ import numpy as np
 
 from caen_felib import lib, device, error
 
-print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
+print(f'CAEN FELib binding loaded (lib version {lib.version})')
 
 # Connect
 dig = device.connect('dig2://10.105.250.7')
