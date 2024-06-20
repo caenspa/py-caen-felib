@@ -11,6 +11,15 @@
 -----------------------------------------------------------------------------
 
 
+v1.2.3 (XX/XX/2024)
+-------------------
+
+Fixes:
+- Refactoring wrapper to binding, that is more appropriate.
+- Fix typing of set_read_data_format.
+- Doc improved.
+
+
 v1.2.2 (14/06/2024)
 -------------------
 
