@@ -14,6 +14,10 @@
 v1.2.3 (XX/XX/2024)
 -------------------
 
+New features:
+- New file types, that includes enumerators to help decoding
+    DPP-PHA and DPP-PSD error flags and probe types from events.
+
 Fixes:
 - Refactoring wrapper to binding, that is more appropriate.
 - Fix typing of set_read_data_format.
