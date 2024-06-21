@@ -4,7 +4,8 @@
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2024 CAEN SpA'
-__license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
+__license__ = 'LGPL-3.0-or-later'
+# SPDX-License-Identifier: LGPL-3.0-or-later
 
 from enum import Flag, IntEnum, unique
 
@@ -19,7 +20,7 @@ class DppDigitalProbeType(IntEnum):
     RE_TRIGGER_GUARD                = 0b00010
     ENERGY_FILTER_BASELINE_FREEZE   = 0b00011
     EVENT_PILE_UP                   = 0b00111
-    # PHA specifi
+    # PHA specific
     ENERGY_FILTER_PEAKING           = 0b00100
     ENERGY_FILTER_PEAK_READY        = 0b00101
     ENERGY_FILTER_PILE_UP_GUARD     = 0b00110
