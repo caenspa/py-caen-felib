@@ -11,8 +11,28 @@ from enum import Flag, IntEnum, unique
 
 
 @unique
+class DppAnalogProbeType(IntEnum):
+    """
+    Analog probe types for Dig2 DPP-PSD and DPP-PHA events
+    """
+    UNKNOWN                         = 0xff
+    # Common
+    ADC_INPUT                       = 0b0000
+    # PHA specific
+    TIME_FILTER                     = 0b0001
+    ENERGY_FILTER                   = 0b0010
+    ENERGY_FILTER_BASELINE          = 0b0011
+    ENERGY_FILTER_MINUS_BASELINE    = 0b0100
+    # PSD specific
+    BASELINE                        = 0b1001
+    CFD                             = 0b1010
+
+
+@unique
 class DppDigitalProbeType(IntEnum):
-    """Digital probe types"""
+    """
+    Digital probe types for Dig2 DPP-PSD and DPP-PHA events
+    """
     UNKNOWN                         = 0xff
     # Common
     TRIGGER                         = 0b00000
@@ -40,7 +60,9 @@ class DppDigitalProbeType(IntEnum):
 
 
 class HighPriorityFlagsPha(Flag):
-    """High priority flags on DPP-PHA events"""
+    """
+    High priority flags on Dig2 DPP-PHA events
+    """
     PILE_UP                 = 0x01
     PILE_UP_REJECTOR_GUARD  = 0x02
     EVENT_SATURATION        = 0x04
@@ -50,7 +72,9 @@ class HighPriorityFlagsPha(Flag):
 
 
 class HighPriorityFlagsPsd(Flag):
-    """High priority flags on DPP-PSD events"""
+    """
+    High priority flags on Dig2 DPP-PSD events
+    """
     PILE_UP                 = 0x01
     EVENT_SATURATION        = 0x04
     POST_SATURATION         = 0x08
@@ -60,7 +84,9 @@ class HighPriorityFlagsPsd(Flag):
 
 
 class LowPriorityFlags(Flag):
-    """Low priority flags on DPP-PHA and DPP-PSD events"""
+    """
+    Low priority flags on Dig2 DPP-PHA and DPP-PSD events
+    """
     WAVE_ON_EXT_INHIBIT     = 0x001
     WAVE_UNDER_SATURATION   = 0x002
     WAVE_OVER_SATURATION    = 0x004
