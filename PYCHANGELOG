@@ -4,11 +4,26 @@
 
 -----------------------------------------------------------------------------
 
-    CAEN FE Library - Python wrapper
+    CAEN FE Library - Python binding
 
     Changelog.
 
 -----------------------------------------------------------------------------
+
+
+v1.2.3 (24/06/2024)
+-------------------
+
+New features:
+- New file types, that includes enumerators to help decoding
+    DPP-PHA and DPP-PSD error flags and probe types from events,
+    available in dig1_types and dig2_types submodules.
+- Tentative support of PTRDIFF_T data type.
+
+Fixes:
+- Refactoring wrapper to binding, that is more appropriate.
+- Fix typing of set_read_data_format.
+- Doc improved.
 
 
 v1.2.2 (14/06/2024)

@@ -4,22 +4,22 @@
 
 __author__ = 'Giovanni Cerretani'
 __copyright__ = 'Copyright (C) 2023 CAEN SpA'
-__license__ = 'LGPL-3.0-or-later'  # SPDX-License-Identifier
+__license__ = 'LGPL-3.0-or-later'
+# SPDX-License-Identifier: LGPL-3.0-or-later
 
 import ctypes as ct
 from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Dict, Generator, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import TypedDict, Self
+from typing_extensions import Self
 
 from caen_felib import lib, _utils
 
 # Comments on imports:
-# - TypedDict moved to typing on Python 3.8
 # - Self moved to typing on Python 3.11
 # - numpy.typing.DTypeLike requires numpy >= 1.20
 
@@ -36,7 +36,7 @@ _type_map: Dict[str, npt.DTypeLike] = {
     'CHAR': ct.c_char,
     'BOOL': ct.c_bool,
     'SIZE_T': ct.c_size_t,
-    # 'PTRDIFF_T' unsupported on Python
+    'PTRDIFF_T': ct.c_ssize_t,  # not exactly the same, but should be fine at least on supported platforms
     'FLOAT': ct.c_float,
     'DOUBLE': ct.c_double,
     'LONG DOUBLE': ct.c_longdouble,
@@ -119,7 +119,7 @@ class _Data:
 @unique
 class NodeType(IntEnum):
     """
-    Wrapper to ::CAEN_FELib_NodeType_t
+    Binding of ::CAEN_FELib_NodeType_t
     """
     UNKNOWN = -1
     PARAMETER = 0
@@ -163,12 +163,12 @@ class Node:
         if self.opened:
             self.close()
 
-    # C API wrappers
+    # C API bindings
 
     @classmethod
     def open(cls: Type[Self], url: str) -> Self:
         """
-        Wrapper to CAEN_FELib_Open()
+        Binding of CAEN_FELib_Open()
 
         Example:
         ```
@@ -188,7 +188,7 @@ class Node:
     @_utils.lru_cache_clear(cache_manager=__node_cache_manager)
     def close(self) -> None:
         """
-        Wrapper to CAEN_FELib_Close()
+        Binding of CAEN_FELib_Close()
 
         This will also clear class cache to remove all references
         to child nodes. It will impact also nodes of other digitizer,
@@ -201,7 +201,7 @@ class Node:
 
     def get_impl_lib_version(self) -> str:
         """
-        Wrapper to CAEN_FELib_GetImplLibVersion()
+        Binding of CAEN_FELib_GetImplLibVersion()
 
         @sa version
         @return						version (a string)
@@ -214,7 +214,7 @@ class Node:
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> Tuple[Self, ...]:
         """
-        Wrapper to CAEN_FELib_GetChildHandles()
+        Binding of CAEN_FELib_GetChildHandles()
 
         @sa child_nodes
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
@@ -234,7 +234,7 @@ class Node:
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_parent_node(self, path: Optional[str] = None) -> Self:
         """
-        Wrapper to CAEN_FELib_GetParentHandle()
+        Binding of CAEN_FELib_GetParentHandle()
 
         @sa parent_node
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
@@ -248,7 +248,7 @@ class Node:
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node(self, path: Optional[str] = None) -> Self:
         """
-        Wrapper to CAEN_FELib_GetHandle()
+        Binding of CAEN_FELib_GetHandle()
 
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
         @return						node at the provided path
@@ -261,7 +261,7 @@ class Node:
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_path(self) -> str:
         """
-        Wrapper to CAEN_FELib_GetPath()
+        Binding of CAEN_FELib_GetPath()
 
         @sa path
         @return						absolute path of the provided handle (a string)
@@ -274,7 +274,7 @@ class Node:
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node_properties(self, path: Optional[str] = None) -> Tuple[str, NodeType]:
         """
-        Wrapper to CAEN_FELib_GetNodeProperties()
+        Binding of CAEN_FELib_GetNodeProperties()
 
         @sa name and Node.type
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
@@ -288,7 +288,7 @@ class Node:
 
     def get_device_tree(self, initial_size: int = 2**22) -> Dict:
         """
-        Wrapper to CAEN_FELib_GetDeviceTree()
+        Binding of CAEN_FELib_GetDeviceTree()
 
         @param[in] initial_size		inizial size to allocate for the first iteration
         @return						JSON representation of the node structure (a dictionary)
@@ -303,7 +303,7 @@ class Node:
 
     def get_value(self, path: Optional[str] = None) -> str:
         """
-        Wrapper to CAEN_FELib_GetValue()
+        Binding of CAEN_FELib_GetValue()
 
         @sa value
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
@@ -316,7 +316,7 @@ class Node:
 
     def get_value_with_arg(self, path: Optional[str], arg: str) -> str:
         """
-        Wrapper to CAEN_FELib_GetValue()
+        Binding of CAEN_FELib_GetValue()
 
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
         @param[in] arg				optional argument (either a string or `None` that is interpreted as an empty string)
@@ -329,7 +329,7 @@ class Node:
 
     def set_value(self, path: Optional[str], value: str) -> None:
         """
-        Wrapper to CAEN_FELib_SetValue()
+        Binding of CAEN_FELib_SetValue()
 
         @sa value
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
@@ -340,7 +340,7 @@ class Node:
 
     def get_user_register(self, address: int) -> int:
         """
-        Wrapper to CAEN_FELib_GetUserRegister()
+        Binding of CAEN_FELib_GetUserRegister()
 
         @param[in] address			user register address
         @return						value of the register (a int)
@@ -352,7 +352,7 @@ class Node:
 
     def set_user_register(self, address: int, value: int) -> None:
         """
-        Wrapper to CAEN_FELib_SetUserRegister()
+        Binding of CAEN_FELib_SetUserRegister()
 
         @param[in] address			user register address
         @param[in] value			value of the register
@@ -362,7 +362,7 @@ class Node:
 
     def send_command(self, path: Optional[str] = None) -> None:
         """
-        Wrapper to CAEN_FELib_SendCommand()
+        Binding of CAEN_FELib_SendCommand()
 
         @sa __call__
         @param[in] path				relative path of a node (either a string or `None` that is interpreted as an empty string)
@@ -370,9 +370,9 @@ class Node:
         """
         lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[_Data._DataField]) -> Tuple[_Data, ...]:
+    def set_read_data_format(self, fmt: List[Dict[str, Any]]) -> Tuple[_Data, ...]:
         """
-        Wrapper to CAEN_FELib_SetReadDataFormat()
+        Binding of CAEN_FELib_SetReadDataFormat()
 
         In addition to what happens in C library, it also allocate data. Size of fields
         with `dim > 0` must be specified by a `"shape"` entry in the field description,
@@ -415,7 +415,7 @@ class Node:
 
     def read_data(self, timeout: int, data: Tuple[_Data, ...]) -> None:
         """
-        Wrapper to CAEN_FELib_ReadData()
+        Binding of CAEN_FELib_ReadData()
 
         Unlike what happens in C library, variadic arguments are added automatically
         according to what has been specified by set_read_data_format(). Data can be
@@ -446,14 +446,14 @@ class Node:
         ```
 
         @param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
-        @param[out] data			A tuple of _Data with requested data fields. The one returned by set_data_format() fits perfectly.
+        @param[out] data			The object returned by set_read_data_format().
         @exception					error.Error in case of error
         """
         lib.read_data(self.handle, timeout, *(d.arg for d in data))
 
     def has_data(self, timeout: int) -> None:
         """
-        Wrapper to CAEN_FELib_HasData()
+        Binding of CAEN_FELib_HasData()
 
         @param[in] timeout			timeout of the function in milliseconds; if this value is -1 the function is blocking with infinite timeout
         @exception					error.Error in case of error
@@ -513,7 +513,7 @@ class Node:
         """Called when exiting from `with` block"""
         self.close()
 
-    def __iter__(self) -> Generator[Self, None, None]:
+    def __iter__(self) -> Iterator[Self]:
         """Utility to simplify node browsing"""
         yield from self.child_nodes
 
@@ -542,5 +542,5 @@ class Node:
 
 @wraps(Node.open)
 def connect(url: str) -> Node:
-    """Wrapper to Node.open"""
+    """Binding of Node.open"""
     return Node.open(url)

@@ -4,7 +4,7 @@ authors = [
 	{ name="Giovanni Cerretani" },
 	{ name="Daniele Ninci" },
 ]
-description = "Official Python wrapper for the CAEN FELib."
+description = "Official Python binding for the CAEN FELib."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [

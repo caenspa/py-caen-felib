@@ -1,5 +1,5 @@
 # caen_felib
-The official Python wrapper for the CAEN FELib.
+The official Python binding for the CAEN FELib.
 
 ## Install
 You need to install both the latest version of CAEN FELib and an implementation like the CAEN Dig2 from [the CAEN website](https://www.caen.it/products/caen-felib-library/).
