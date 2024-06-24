@@ -11,16 +11,15 @@ import ctypes as ct
 from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Dict, Generator, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, TypedDict
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import TypedDict, Self
+from typing_extensions import Self
 
 from caen_felib import lib, _utils
 
 # Comments on imports:
-# - TypedDict moved to typing on Python 3.8
 # - Self moved to typing on Python 3.11
 # - numpy.typing.DTypeLike requires numpy >= 1.20
 
@@ -37,7 +36,7 @@ _type_map: Dict[str, npt.DTypeLike] = {
     'CHAR': ct.c_char,
     'BOOL': ct.c_bool,
     'SIZE_T': ct.c_size_t,
-    # 'PTRDIFF_T' unsupported on Python
+    'PTRDIFF_T': ct.c_ssize_t,  # not exactly the same, but should be fine at least on supported platforms
     'FLOAT': ct.c_float,
     'DOUBLE': ct.c_double,
     'LONG DOUBLE': ct.c_longdouble,
@@ -514,7 +513,7 @@ class Node:
         """Called when exiting from `with` block"""
         self.close()
 
-    def __iter__(self) -> Generator[Self, None, None]:
+    def __iter__(self) -> Iterator[Self]:
         """Utility to simplify node browsing"""
         yield from self.child_nodes
 
