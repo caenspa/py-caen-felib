@@ -10,10 +10,10 @@ __license__ = 'LGPL-3.0-or-later'
 import ctypes as ct
 from functools import lru_cache, wraps, _lru_cache_wrapper
 import sys
-from typing import Any, Callable, List, Optional, Tuple, TypeVar, overload
+from typing import Any, List, Optional, Tuple, TypeVar, overload
 from weakref import ref, ReferenceType
 
-from typing_extensions import Concatenate, ParamSpec
+from typing_extensions import ParamSpec
 
 # Comments on imports:
 # - ReferenceType is not subscriptable on Python <= 3.8
@@ -121,11 +121,11 @@ _P = ParamSpec('_P')
 _T = TypeVar('_T')
 
 
-def lru_cache_method(
-    cache_manager: Optional[CacheManager] = None,
-    maxsize: int = 128,
-    typed: bool = False,
-) -> Callable[[Callable[Concatenate[_S, _P], _T]], Callable[Concatenate[_S, _P], _T]]:
+# Typing support for decorators comes with Python 3.10.
+# Omitted because very verbose.
+
+
+def lru_cache_method(cache_manager: Optional[CacheManager] = None, maxsize: int = 128, typed: bool = False):
     """
     LRU cache decorator that keeps a weak reference to self.
 
@@ -139,19 +139,17 @@ def lru_cache_method(
     @sa https://stackoverflow.com/a/68052994/3287591
     """
 
-    def wrapper(method: Callable[Concatenate[_S, _P], _T]) -> Callable[Concatenate[_S, _P], _T]:
+    def wrapper(method):
 
         @lru_cache(maxsize, typed)
         # ReferenceType is not subscriptable on Python <= 3.8
-        def cached_method(self_ref: ReferenceType, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+        def cached_method(self_ref: ReferenceType, *args, **kwargs):
             self = self_ref()
-            if self is not None:
-                return method(self, *args, **kwargs)
-            # self cannot be None: this function is always called by inner()
-            assert False, 'unreachable'
+            assert self is not None  # this function is always called by inner()
+            return method(self, *args, **kwargs)
 
         @wraps(method)
-        def inner(self: _S, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+        def inner(self, *args, **kwargs):
             # Ignore MyPy type checks because of bugs on lru_cache support.
             # See https://stackoverflow.com/a/73517689/3287591.
             return cached_method(ref(self), *args, **kwargs)  # type: ignore
@@ -166,9 +164,7 @@ def lru_cache_method(
     return wrapper
 
 
-def lru_cache_clear(
-    cache_manager: CacheManager,
-) -> Callable[[Callable[Concatenate[_S, _P], _T]], Callable[Concatenate[_S, _P], _T]]:
+def lru_cache_clear(cache_manager: CacheManager):
     """
     LRU cache decorator that clear cache.
 
@@ -176,14 +172,20 @@ def lru_cache_clear(
     the cache.
     """
 
-    def wrapper(method: Callable[Concatenate[_S, _P], _T]) -> Callable[Concatenate[_S, _P], _T]:
+    def wrapper(method):
+
+        # ReferenceType is not subscriptable on Python <= 3.8
+        def not_cached_method(self_ref: ReferenceType, *args, **kwargs):
+            self = self_ref()
+            assert self is not None  # this function is always called by inner()
+            return method(self, *args, **kwargs)
 
         @wraps(method)
-        def inner(self: _S, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+        def inner(self, *args, **kwargs):
             # Ignore MyPy type checks because of bugs on lru_cache support.
             # See https://stackoverflow.com/a/73517689/3287591.
             cache_manager.clear_all()
-            return method(ref(self), *args, **kwargs)  # type: ignore
+            return not_cached_method(ref(self), *args, **kwargs)  # type: ignore
 
         return inner
 
