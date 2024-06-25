@@ -10,10 +10,10 @@ __license__ = 'LGPL-3.0-or-later'
 import ctypes as ct
 from functools import lru_cache, wraps, _lru_cache_wrapper
 import sys
-from typing import Any, Callable, List, Optional, Tuple, TypeVar, overload
+from typing import Any, List, Optional, Tuple, TypeVar, overload
 from weakref import ref, ReferenceType
 
-from typing_extensions import Concatenate, ParamSpec
+from typing_extensions import ParamSpec
 
 # Comments on imports:
 # - ReferenceType is not subscriptable on Python <= 3.8
