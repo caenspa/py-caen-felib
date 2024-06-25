@@ -11,6 +11,17 @@
 -----------------------------------------------------------------------------
 
 
+v1.2.4 (25/06/2024)
+-------------------
+
+Changes:
+- Examples moved to examples folder.
+
+New features:
+- Update `[project.urls]` on pyproject.tolm, with new public repositories
+    on github.com.
+
+
 v1.2.3 (24/06/2024)
 -------------------
 

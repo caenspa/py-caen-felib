@@ -35,3 +35,5 @@ version = {attr = "caen_felib.__version__"}
 Homepage = "https://www.caen.it"
 Documentation = "https://www.caen.it/products/caen-felib-library/"
 Support = "https://www.caen.it/mycaen/support/"
+Source = "https://github.com/caenspa/py-caen-felib"
+Changelog  = "https://github.com/caenspa/py-caen-felib/blob/main/PYCHANGELOG"
