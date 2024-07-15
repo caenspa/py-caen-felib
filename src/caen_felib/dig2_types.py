@@ -7,7 +7,7 @@ __copyright__ = 'Copyright (C) 2024 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-from enum import Flag, IntEnum, unique
+from enum import IntFlag, IntEnum, unique
 
 
 @unique
@@ -59,7 +59,7 @@ class DppDigitalProbeType(IntEnum):
     NEGATIVE_OVER_THRESHOLD         = 0b11011
 
 
-class HighPriorityFlagsPha(Flag):
+class HighPriorityFlagsPha(IntFlag):
     """
     High priority flags on Dig2 DPP-PHA events
     """
@@ -71,7 +71,7 @@ class HighPriorityFlagsPha(Flag):
     SCA_SELECTED            = 0x20
 
 
-class HighPriorityFlagsPsd(Flag):
+class HighPriorityFlagsPsd(IntFlag):
     """
     High priority flags on Dig2 DPP-PSD events
     """
@@ -83,7 +83,7 @@ class HighPriorityFlagsPsd(Flag):
     FINE_TIMESTAMP          = 0x40
 
 
-class LowPriorityFlags(Flag):
+class LowPriorityFlags(IntFlag):
     """
     Low priority flags on Dig2 DPP-PHA and DPP-PSD events
     """

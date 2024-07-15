@@ -11,6 +11,18 @@
 -----------------------------------------------------------------------------
 
 
+v1.2.6 (XX/XX/2024)
+-------------------
+
+Changes:
+- dig1_types.HighPriorityFlagsPsd renamed to dig1_types.DppFlags.
+
+Fixes:
+- Classes inheriting enum.Flag now inherit enum.IntFlag to improve
+    the support of unknown flags. This applies to all the classes
+    on dig1_types and dig2_types.
+
+
 v1.2.5 (25/06/2024)
 -------------------
 

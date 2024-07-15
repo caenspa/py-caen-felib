@@ -7,7 +7,7 @@ __copyright__ = 'Copyright (C) 2024 CAEN SpA'
 __license__ = 'LGPL-3.0-or-later'
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-from enum import Flag, IntEnum, unique
+from enum import IntFlag, IntEnum, unique
 
 
 @unique
@@ -68,7 +68,7 @@ class DppProbeType(IntEnum):
     NEG_OVERTHR     = 49
     TRAPBASELINE    = 50
 
-class HighPriorityFlagsPsd(Flag):
+class DppFlags(IntFlag):
     """
     Flags on Dig1 DPP events
     """
