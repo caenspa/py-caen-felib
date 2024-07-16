@@ -22,6 +22,10 @@ Fixes:
     the support of unknown flags. This applies to all the classes
     on dig1_types and dig2_types.
 
+New features:
+- Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2
+    package.
+
 
 v1.2.5 (25/06/2024)
 -------------------

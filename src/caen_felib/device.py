@@ -203,7 +203,6 @@ class Node:
         """
         Binding of CAEN_FELib_GetImplLibVersion()
 
-        @sa version
         @return						version (a string)
         @exception					error.Error in case of error
         """
