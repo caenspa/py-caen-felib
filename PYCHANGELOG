@@ -25,6 +25,7 @@ Fixes:
 New features:
 - Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2
     package.
+- Add Dig1 demo to example folder, copied from CAEN Dig1 package.
 
 
 v1.2.5 (25/06/2024)

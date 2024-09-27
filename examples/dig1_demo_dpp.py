@@ -1,5 +1,8 @@
 """
-Python demo for Dig2 digitizers running a DPP-PSD firmware.
+Python demo for Dig1 digitizers running a DPP firmware.
+
+It has been tested with a DT5740 DPP-QDC, but should be
+generic enough to support every digitizers running DPP.
 """
 
 __author__ = 'Giovanni Cerretani'
@@ -16,22 +19,27 @@ from caen_felib import lib, device, error
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 ### CONNECTION PARAMETERS ###
-address = '192.0.2.1'
+connection_type = 'usb'
+link_number = 0
+conet_node = 0
+vme_base_address = 0
 #############################
 
-dig2_scheme = 'dig2'
-dig2_authority = address
-dig2_query = ''
-dig2_path = ''
-dig2_uri = f'{dig2_scheme}://{dig2_authority}/{dig2_path}?{dig2_query}'
+dig1_scheme = 'dig1'
+dig1_authority = 'caen.internal'
+dig1_query = f'link_num={link_number}&conet_node={conet_node}&vme_base_address={vme_base_address}'
+dig1_path = connection_type
+dig1_uri = f'{dig1_scheme}://{dig1_authority}/{dig1_path}?{dig1_query}'
 
 # Connect
-with device.connect(dig2_uri) as dig:
+with device.connect(dig1_uri) as dig:
 
     # Reset
     dig.cmd.RESET()
 
     # Get board info
+    n_analog_traces = int(dig.par.NUMANALOGTRACES.value)
+    n_digital_traces = int(dig.par.NUMDIGITALTRACES.value)
     adc_samplrate_msps = float(dig.par.ADC_SAMPLRATE.value)  # in Msps
     adc_n_bits = int(dig.par.ADC_NBIT.value)
     sampling_period_ns = int(1e3 / adc_samplrate_msps)
@@ -42,19 +50,27 @@ with device.connect(dig2_uri) as dig:
     pretrg_ns = 512  # in ns
 
     # Configure digitizer
-    dig.par.GLOBALTRIGGERSOURCE.value = 'SWTRG'  # Enable software triggers
+    dig.par.RECLEN.value = f'{reclen_ns}'
+    dig.par.TRG_SW_ENABLE.value = 'TRUE'  # Enable software triggers
+    dig.par.STARTMODE.value = 'START_MODE_SW'  # Set software start mode
+    dig.par.WAVEFORMS.value = 'TRUE'  # Enable waveforms
     for i, ch in enumerate(dig.ch):
-        ch.par.CHENABLE.value = 'TRUE' if i == 0 else 'FALSE'  # Enable only channel 0
-        ch.par.EVENTTRIGGERSOURCE.value = 'GLOBALTRIGGERSOURCE'
-        ch.par.WAVETRIGGERSOURCE.value = 'GLOBALTRIGGERSOURCE'
-        ch.par.CHRECORDLENGTHT.value = f'{reclen_ns}'
-        ch.par.CHPRETRIGGERT.value = f'{pretrg_ns}'
-        ch.par.WAVEANALOGPROBE0.value = 'ADCINPUT'
-        ch.par.WAVEDIGITALPROBE0.value = 'TRIGGER'
+        ch.par.CH_ENABLED.value = 'TRUE' if i == 0 else 'FALSE'  # Enable only channel 0
+        ch.par.CH_PRETRG.value = f'{pretrg_ns}'
+
+    # Invoke CalibrationADC command at the end of the configuration.
+    # This is required by x725, x730 and x751 digitizers, no-op otherwise.
+    dig.cmd.CALIBRATEADC()
 
     # Compute record length in samples
-    reclen_ns = int(dig.ch[0].par.CHRECORDLENGTHT.value)  # Read back CHRECORDLENGTHT to check if there have been rounding
+    reclen_ns = int(dig.par.RECLEN.value)  # Read back RECLEN to check if there have been rounding
     reclen = int(reclen_ns / sampling_period_ns)
+
+    # Configure probe types
+    analog_probe_1_node = dig.vtrace[0]
+    analog_probe_1_node.par.VTRACE_PROBE.value = 'VPROBE_INPUT'
+    digital_probe_1_node = dig.vtrace[n_analog_traces + 0]
+    digital_probe_1_node.par.VTRACE_PROBE.value = 'VPROBE_TRIGGER'
 
     # Configure endpoint
     data_format = [
@@ -101,10 +117,9 @@ with device.connect(dig2_uri) as dig:
             'dim': 0
         }
     ]
-    decoded_endpoint_path = 'dpppsd'
+    decoded_endpoint_path = fw_type.replace('-', '')  # decoded endpoint path is just firmware type without -
     endpoint = dig.endpoint[decoded_endpoint_path]
     data = endpoint.set_read_data_format(data_format)
-    dig.endpoint.par.ACTIVEENDPOINT.value = decoded_endpoint_path
 
     # Get reference to data fields
     channel = data[0].value
@@ -128,7 +143,6 @@ with device.connect(dig2_uri) as dig:
 
     # Start acquisition
     dig.cmd.ARMACQUISITION()
-    dig.cmd.SWSTARTACQUISITION()
 
     # Read some events
     for _ in range(1000):
@@ -145,8 +159,8 @@ with device.connect(dig2_uri) as dig:
             else:
                 raise ex
 
-        assert analog_probe_1_type == 0  # 0 -> 'adc_input'
-        assert digital_probe_1_type == 0  # 0 -> 'trigger'
+        assert analog_probe_1_type == 1  # 1 -> 'VPROBE_INPUT'
+        assert digital_probe_1_type == 26  # 26 -> 'VPROBE_TRIGGER'
         valid_sample_range = np.arange(0, waveform_size)
         lines[0].set_data(valid_sample_range, analog_probe_1)
         lines[1].set_data(valid_sample_range, digital_probe_1 * 2000 + 1000)  # scale digital probe to be visible
