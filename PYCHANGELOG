@@ -21,6 +21,7 @@ Fixes:
 - Classes inheriting enum.Flag now inherit enum.IntFlag to improve
     the support of unknown flags. This applies to all the classes
     on dig1_types and dig2_types.
+- Fix changelog path on pypi.org.
 
 New features:
 - Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2
