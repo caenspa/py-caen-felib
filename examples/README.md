@@ -1,5 +1,6 @@
 # Examples
-This folder contains just an example for the Dig2 scope firmware.
+This folder contains examples for the x27XX family.
+Please select the demo corrisponding to the firmware used on the board. 
 
 More examples can be found in the official packages of
 the implementation libraries.
