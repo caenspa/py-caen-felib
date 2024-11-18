@@ -11,8 +11,13 @@
 -----------------------------------------------------------------------------
 
 
-v1.2.6 (XX/XX/2024)
+v1.2.6 (18/11/2024)
 -------------------
+
+New features:
+- Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2
+    package.
+- Add Dig1 demo to example folder, copied from CAEN Dig1 package.
 
 Changes:
 - dig1_types.HighPriorityFlagsPsd renamed to dig1_types.DppFlags.
@@ -22,11 +27,6 @@ Fixes:
     the support of unknown flags. This applies to all the classes
     on dig1_types and dig2_types.
 - Fix changelog path on pypi.org.
-
-New features:
-- Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2
-    package.
-- Add Dig1 demo to example folder, copied from CAEN Dig1 package.
 
 
 v1.2.5 (25/06/2024)
