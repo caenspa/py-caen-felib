@@ -203,7 +203,6 @@ class Node:
         """
         Binding of CAEN_FELib_GetImplLibVersion()
 
-        @sa version
         @return						version (a string)
         @exception					error.Error in case of error
         """
@@ -431,9 +430,9 @@ class Node:
             try:
                 ep_node.read_data(100, data)
             except error.Error as ex:
-                if ex.code == error.ErrorCode.Timeout:
+                if ex.code is error.ErrorCode.TIMEOUT:
                     continue
-                elif ex.code == error.ErrorCode.Stop:
+                elif ex.code is error.ErrorCode.STOP:
                     break
                 else:
                     raise ex

@@ -1,9 +1,12 @@
 """
-Python demo for Dig2 digitizers running a Scope firmware.
+Python demo for Dig1 digitizers running a Waveform recording firmware.
+
+It has been tested with a DT5740 Waveform recording, but should be
+generic enough to support every digitizers running Waveform recording.
 """
 
 __author__ = 'Giovanni Cerretani'
-__copyright__ = 'Copyright (C) 2024 CAEN SpA'
+__copyright__ = 'Copyright (C) 2023 CAEN SpA'
 __license__ = 'MIT-0'  # SPDX-License-Identifier
 __contact__ = 'https://www.caen.it/'
 
@@ -16,23 +19,28 @@ from caen_felib import lib, device, error
 print(f'CAEN FELib wrapper loaded (lib version {lib.version})')
 
 ### CONNECTION PARAMETERS ###
-address = '192.0.2.1'
+connection_type = 'usb'
+link_number = 0
+conet_node = 0
+vme_base_address = 0
 #############################
 
-dig2_scheme = 'dig2'
-dig2_authority = address
-dig2_query = ''
-dig2_path = ''
-dig2_uri = f'{dig2_scheme}://{dig2_authority}/{dig2_path}?{dig2_query}'
+dig1_scheme = 'dig1'
+dig1_authority = 'caen.internal'
+dig1_query = f'link_num={link_number}&conet_node={conet_node}&vme_base_address={vme_base_address}'
+dig1_path = connection_type
+dig1_uri = f'{dig1_scheme}://{dig1_authority}/{dig1_path}?{dig1_query}'
 
 # Connect
-with device.connect(dig2_uri) as dig:
+with device.connect(dig1_uri) as dig:
 
     # Reset
     dig.cmd.RESET()
 
     # Get board info
     n_ch = int(dig.par.NUMCH.value)
+    n_analog_traces = int(dig.par.NUMANALOGTRACES.value)
+    n_digital_traces = int(dig.par.NUMDIGITALTRACES.value)
     adc_samplrate_msps = float(dig.par.ADC_SAMPLRATE.value)  # in Msps
     adc_n_bits = int(dig.par.ADC_NBIT.value)
     sampling_period_ns = int(1e3 / adc_samplrate_msps)
@@ -40,16 +48,21 @@ with device.connect(dig2_uri) as dig:
 
     # Configuration parameters
     reclen_ns = 4096  # in ns
-    pretrg_ns = 512  # in ns
+    posttrg_ns = 4096 - 512  # in ns
 
     # Configure digitizer
-    dig.par.RECORDLENGTHT.value = f'{reclen_ns}'
-    dig.par.PRETRIGGERT.value = f'{pretrg_ns}'
-    dig.par.ACQTRIGGERSOURCE.value = 'SWTRG'  # Enable software triggers
+    dig.par.RECLEN.value = f'{reclen_ns}'
+    dig.par.POSTTRG.value = f'{posttrg_ns}'
+    dig.par.TRG_SW_ENABLE.value = 'TRUE'  # Enable software triggers
+    dig.par.STARTMODE.value = 'START_MODE_SW'  # Set software start mode
+
+    # Invoke CalibrationADC command at the end of the configuration.
+    # This is required by x725, x730 and x751 digitizers, no-op otherwise.
+    dig.cmd.CALIBRATEADC()
 
     # Compute record length in samples
-    reclen_ns = int(dig.par.RECORDLENGTHT.value)  # Read back RECORDLENGTHS to check if there have been rounding
-    reclen = reclen_ns // sampling_period_ns
+    reclen_ns = int(dig.par.RECLEN.value)  # Read back RECLEN to check if there have been rounding
+    reclen = int(reclen_ns / sampling_period_ns)
 
     # Configure endpoint
     data_format = [
@@ -74,10 +87,9 @@ with device.connect(dig2_uri) as dig:
             'shape': [n_ch],
         },
     ]
-    decoded_endpoint_path = 'scope'
+    decoded_endpoint_path = fw_type.replace('-', '')  # decoded endpoint path is just firmware type without -
     endpoint = dig.endpoint[decoded_endpoint_path]
     data = endpoint.set_read_data_format(data_format)
-    dig.endpoint.par.ACTIVEENDPOINT.value = decoded_endpoint_path
 
     # Get reference to data fields
     event_size = data[0].value
@@ -97,7 +109,6 @@ with device.connect(dig2_uri) as dig:
 
     # Start acquisition
     dig.cmd.ARMACQUISITION()
-    dig.cmd.SWSTARTACQUISITION()
 
     # Read some events
     for _ in range(1000):
@@ -107,9 +118,9 @@ with device.connect(dig2_uri) as dig:
         try:
             endpoint.read_data(100, data)
         except error.Error as ex:
-            if ex.code == error.ErrorCode.TIMEOUT:
+            if ex.code is error.ErrorCode.TIMEOUT:
                 continue
-            if ex.code == error.ErrorCode.STOP:
+            if ex.code is error.ErrorCode.STOP:
                 break
             else:
                 raise ex
