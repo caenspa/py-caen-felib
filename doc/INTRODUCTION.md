@@ -14,7 +14,7 @@ and can be installed using pip:
 Public methods are documented on section @ref Python.
 
 # Language
-It requires Python >= 3.8. Type hints are supported.
+It requires Python >= 3.9. Type hints are supported.
 
 # Changelog
 See @ref PYCHANGELOG.

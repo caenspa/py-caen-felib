@@ -8,10 +8,11 @@ __license__ = 'LGPL-3.0-or-later'
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 import ctypes as ct
+from collections.abc import Iterator
 from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, TypedDict
+from typing import Any, Optional, TypedDict
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +25,7 @@ from caen_felib import lib, _utils
 # - numpy.typing.DTypeLike requires numpy >= 1.20
 
 
-_type_map: Dict[str, npt.DTypeLike] = {
+_type_map: dict[str, npt.DTypeLike] = {
     'U8': ct.c_uint8,
     'U16': ct.c_uint16,
     'U32': ct.c_uint32,
@@ -54,7 +55,7 @@ class _Data:
     name: str
     type: str
     dim: int
-    shape: List[int]
+    shape: list[int]
     dtype: np.dtype
     value: np.ndarray
     proxy_value_2d: Optional[np.ndarray]
@@ -65,7 +66,7 @@ class _Data:
         name: str
         type: str
         dim: int
-        shape: List[int]
+        shape: list[int]
 
     def __init__(self, data_field: _DataField) -> None:
 
@@ -166,7 +167,7 @@ class Node:
     # C API bindings
 
     @classmethod
-    def open(cls: Type[Self], url: str) -> Self:
+    def open(cls: type[Self], url: str) -> Self:
         """
         Binding of CAEN_FELib_Open()
 
@@ -211,7 +212,7 @@ class Node:
         return value.value.decode()
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
-    def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> Tuple[Self, ...]:
+    def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> tuple[Self, ...]:
         """
         Binding of CAEN_FELib_GetChildHandles()
 
@@ -271,7 +272,7 @@ class Node:
         return value.value.decode()
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
-    def get_node_properties(self, path: Optional[str] = None) -> Tuple[str, NodeType]:
+    def get_node_properties(self, path: Optional[str] = None) -> tuple[str, NodeType]:
         """
         Binding of CAEN_FELib_GetNodeProperties()
 
@@ -285,7 +286,7 @@ class Node:
         lib.get_node_properties(self.handle, _utils.to_bytes_opt(path), name, node_type)
         return name.value.decode(), NodeType(node_type.value)
 
-    def get_device_tree(self, initial_size: int = 2**22) -> Dict:
+    def get_device_tree(self, initial_size: int = 2**22) -> dict:
         """
         Binding of CAEN_FELib_GetDeviceTree()
 
@@ -369,7 +370,7 @@ class Node:
         """
         lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: List[Dict[str, Any]]) -> Tuple[_Data, ...]:
+    def set_read_data_format(self, fmt: list[dict[str, Any]]) -> tuple[_Data, ...]:
         """
         Binding of CAEN_FELib_SetReadDataFormat()
 
@@ -412,7 +413,7 @@ class Node:
         # Allocate requested fields
         return tuple(_Data(f) for f in fmt)
 
-    def read_data(self, timeout: int, data: Tuple[_Data, ...]) -> None:
+    def read_data(self, timeout: int, data: tuple[_Data, ...]) -> None:
         """
         Binding of CAEN_FELib_ReadData()
 
@@ -487,8 +488,8 @@ class Node:
         return self.get_parent_node(None)
 
     @property
-    def child_nodes(self) -> Tuple[Self, ...]:
-        """List of child nodes"""
+    def child_nodes(self) -> tuple[Self, ...]:
+        """list of child nodes"""
         return self.get_child_nodes(None)
 
     @property

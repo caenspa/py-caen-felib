@@ -10,13 +10,12 @@ __license__ = 'LGPL-3.0-or-later'
 import ctypes as ct
 from functools import lru_cache, wraps, _lru_cache_wrapper
 import sys
-from typing import Any, List, Optional, Tuple, TypeVar, overload
+from typing import Any, Optional, TypeVar, overload
 from weakref import ref, ReferenceType
 
 from typing_extensions import ParamSpec
 
 # Comments on imports:
-# - ReferenceType is not subscriptable on Python <= 3.8
 # - Concatenate and ParamSpec moved to typing on Python 3.10
 
 
@@ -95,12 +94,12 @@ class Lib:
         return self.path
 
 
-def version_to_tuple(version: str) -> Tuple[int, ...]:
+def version_to_tuple(version: str) -> tuple[int, ...]:
     """Version string in the form N.N.N to tuple (N, N, N)"""
     return tuple(map(int, version.split('.')))
 
 
-class CacheManager(List[_lru_cache_wrapper]):
+class CacheManager(list[_lru_cache_wrapper]):
     """
     A simple list of functions returned by `@lru_cache` decorator.
 
@@ -142,7 +141,6 @@ def lru_cache_method(cache_manager: Optional[CacheManager] = None, maxsize: int 
     def wrapper(method):
 
         @lru_cache(maxsize, typed)
-        # ReferenceType is not subscriptable on Python <= 3.8
         def cached_method(self_ref: ReferenceType, *args, **kwargs):
             self = self_ref()
             assert self is not None  # this function is always called by inner()
@@ -174,7 +172,6 @@ def lru_cache_clear(cache_manager: CacheManager):
 
     def wrapper(method):
 
-        # ReferenceType is not subscriptable on Python <= 3.8
         def not_cached_method(self_ref: ReferenceType, *args, **kwargs):
             self = self_ref()
             assert self is not None  # this function is always called by inner()

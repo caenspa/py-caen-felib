@@ -3,7 +3,7 @@ stages:
   - deploy
 
 test-mypy:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.8
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.9
   stage: test
   when: manual
   script:
@@ -11,7 +11,7 @@ test-mypy:
     - mypy src
 
 test-pylint:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.8
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.9
   stage: test
   when: manual
   script:
@@ -19,7 +19,7 @@ test-pylint:
     - pylint src
 
 pypi-upload:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.8
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.9
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG
