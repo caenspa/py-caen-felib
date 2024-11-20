@@ -16,6 +16,7 @@ v1.3.0 (XX/XX/2024)
 
 New features:
 - Dropped support for Python 3.8
+- Class `device._Data` made public as `device.Data`
 
 
 v1.2.6 (18/11/2024)

@@ -8,11 +8,12 @@ __license__ = 'LGPL-3.0-or-later'
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 import ctypes as ct
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
-from typing import Any, Optional, TypedDict
+from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -44,54 +45,39 @@ _type_map: dict[str, npt.DTypeLike] = {
 }
 
 
-class _Data:
+@dataclass
+class Data:
     """
     Class representing data set by Node.set_read_data_format().
-    It holds a `numpy.ndarray` allocated with shape specified
-    in the data format.
+    It holds a `numpy.ndarray` in value allocated with shape
+    specified in the data format.
     """
+    name: str  ## Field name
+    type: str  ## Field type
+    dim: int = field(default=0)  ## Field dimension
+    shape: list[int] = field(default_factory=list)  ## Field shape
 
-    # Public fields
-    name: str
-    type: str
-    dim: int
-    shape: list[int]
-    dtype: np.dtype
-    value: np.ndarray
-    proxy_value_2d: Optional[np.ndarray]
-    arg: Any
-
-    # Type aliases
-    class _DataField(TypedDict, total=False):
-        name: str
-        type: str
-        dim: int
-        shape: list[int]
-
-    def __init__(self, data_field: _DataField) -> None:
-
-        # Default attributes from fields passed to C library
-
-        ## Field name
-        self.name = data_field['name']
-        ## Field type
-        self.type = data_field['type']
-        ## Field dimension
-        self.dim = data_field.get('dim', 0)
-        ## Field shape (it is a Python extension to allow local allocation)
-        self.shape = data_field.get('shape', [])
+    def __post_init__(self) -> None:
+        if self.dim > 2:
+            raise ValueError('dim cannot be larger than 2')
 
         if self.dim != len(self.shape):
-            raise RuntimeError('shape length must match dim')
+            raise ValueError('shape length must match dim')
 
-        ## Data type of value
-        self.dtype = np.dtype(_type_map[self.type])
-        ## Instance of `numpy.ndarray` that holds data
-        self.value = np.empty(self.shape, dtype=self.dtype)
-        ## Proxy array of pointers used when dim >= 2 (see below)
-        self.proxy_value_2d = None
-        ## ctypes pointer to _Data.value that is used within Node.read_data
-        self.arg = self.__generate_arg()
+        # Memory allocation
+        self.__value = np.empty(self.shape, dtype=np.dtype(_type_map[self.type]))
+        self.__proxy_value_2d: Optional[np.ndarray] = None  # used when dim == 2
+        self.__arg = self.__generate_arg()
+
+    @property
+    def value(self) -> np.ndarray:
+        """Instance of `numpy.ndarray` that holds data"""
+        return self.__value
+
+    @property
+    def arg(self) -> Any:
+        """ctypes pointer to Data.value that is used within Node.read_data"""
+        return self.__arg
 
     def __generate_arg(self) -> Any:
         value: np.ndarray
@@ -104,8 +90,8 @@ class _Data:
             # pointers, used by CAEN_FELib.
             # To overcome the problem we generate a proxy ndarray of pointers.
             ptr_gen = (v.ctypes.data for v in self.value)
-            self.proxy_value_2d = np.fromiter(ptr_gen, dtype=ct.c_void_p)
-            value = self.proxy_value_2d
+            self.__proxy_value_2d = np.fromiter(ptr_gen, dtype=ct.c_void_p)
+            value = self.__proxy_value_2d
         # value.ctypes is equivalent to value.ctypes.data_as(ctypes.c_void_p),
         # that is fine for us.
         return value.ctypes
@@ -139,30 +125,30 @@ class NodeType(IntEnum):
     GROUP = 13
 
 
+@dataclass
 class Node:
     """
     Class representing a node.
     """
 
     # Public members
-    handle: int
-    root_node: Optional[Self]
-    opened: bool
+    handle: int  ## Handle representing the node on the C library
+    root_node: Optional[Self]  ## Root node, set to None on root node (stored to prevent g.c.)
 
     # Static private members
-    __node_cache_manager: _utils.CacheManager = _utils.CacheManager()
+    __node_cache_manager: ClassVar[_utils.CacheManager] = _utils.CacheManager()
 
-    def __init__(self, handle: int, root_node: Optional[Self]) -> None:
-        ## Handle representing the node on the C library
-        self.handle = handle
-        ## Root node, set to None on root node (stored to prevent garbage collection)
-        self.root_node = root_node
-        ## Set on instances that requires close() to be called
-        self.opened = root_node is None
+    def __post_init__(self) -> None:
+        self.__opened = self.root_node is None
 
     def __del__(self) -> None:
         if self.opened:
             self.close()
+
+    @property
+    def opened(self) -> bool:
+        """Set on instances that requires close() to be called"""
+        return self.__opened
 
     # C API bindings
 
@@ -198,7 +184,7 @@ class Node:
         @exception					error.Error in case of error
         """
         lib.close(self.handle)
-        self.opened = False
+        self.__opened = False
 
     def get_impl_lib_version(self) -> str:
         """
@@ -370,7 +356,7 @@ class Node:
         """
         lib.send_command(self.handle, _utils.to_bytes_opt(path))
 
-    def set_read_data_format(self, fmt: list[dict[str, Any]]) -> tuple[_Data, ...]:
+    def set_read_data_format(self, fmt: Sequence[Union[Mapping[str, Any]]]) -> tuple[Data, ...]:
         """
         Binding of CAEN_FELib_SetReadDataFormat()
 
@@ -378,7 +364,7 @@ class Node:
         with `dim > 0` must be specified by a `"shape"` entry in the field description,
         that is a vector passed to the `shape` argument of `np.empty` constructor.
         On fields with `dim == 0` the shape can be omitted, and is set to `[]` by default.
-        Fields can be accessed on data attribute of this class, that is a list of _Data
+        Fields can be accessed on data attribute of this class, that is a list of Data
         inizialized with the field descriptions, in the same order of @p format.
 
         Example:
@@ -398,7 +384,7 @@ class Node:
         ```
 
         @param[in] fmt				JSON representation of the format, in compliance with the endpoint "format" property (a list of dictionaries)
-        @return						Tuple of _Data with allocated buffers of specified dim and shape, to be passed as second argument of read_data()
+        @return						Tuple of Data with allocated buffers of specified dim and shape, to be passed as second argument of read_data()
         @exception					error.Error in case of error
         """
         lib.set_read_data_format(self.handle, dumps(fmt).encode())
@@ -406,14 +392,14 @@ class Node:
         # Important:
         # Do not update lib.ReadData.argtypes with data.argtype because lib.ReadData
         # is shared with all other endpoints and it would not be thread safe.
-        # More details on a comment on the caen_felib.lib constructor.
+        # More details on a comment on the lib._Lib constructor.
         # Possible unsafe code could be something like:
         # lib.ReadData.argtypes = [ct.c_uint64, ct.c_int] + [d.argtype for d in self.data]
 
         # Allocate requested fields
-        return tuple(_Data(f) for f in fmt)
+        return tuple(Data(**f) for f in fmt)
 
-    def read_data(self, timeout: int, data: tuple[_Data, ...]) -> None:
+    def read_data(self, timeout: int, data: Sequence[Data]) -> None:
         """
         Binding of CAEN_FELib_ReadData()
 
