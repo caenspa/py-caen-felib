@@ -68,6 +68,7 @@ class DppProbeType(IntEnum):
     NEG_OVERTHR     = 49
     TRAPBASELINE    = 50
 
+
 class DppFlags(IntFlag):
     """
     Flags on Dig1 DPP events
