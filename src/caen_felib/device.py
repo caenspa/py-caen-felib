@@ -19,7 +19,7 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from caen_felib import lib, _utils
+from caen_felib import lib, _cache, _utils
 
 # Comments on imports:
 # - Self moved to typing on Python 3.11
@@ -136,7 +136,7 @@ class Node:
     root_node: Optional[Self]  ## Root node, set to None on root node (stored to prevent g.c.)
 
     # Static private members
-    __node_cache_manager: ClassVar[_utils.CacheManager] = _utils.CacheManager()
+    __node_cache_manager: ClassVar[_cache.CacheManager] = _cache.CacheManager()
 
     def __post_init__(self) -> None:
         self.__opened = self.root_node is None
@@ -172,7 +172,7 @@ class Node:
         lib.open(_utils.to_bytes(url), value)
         return cls(value.value, None)
 
-    @_utils.lru_cache_clear(cache_manager=__node_cache_manager)
+    @_cache.lru_cache_clear(cache_manager=__node_cache_manager)
     def close(self) -> None:
         """
         Binding of CAEN_FELib_Close()
@@ -197,7 +197,7 @@ class Node:
         lib.get_impl_lib_version(self.handle, value)
         return value.value.decode()
 
-    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
+    @_cache.lru_cache_method(cache_manager=__node_cache_manager)
     def get_child_nodes(self, path: Optional[str] = None, initial_size: int = 2**6) -> tuple[Self, ...]:
         """
         Binding of CAEN_FELib_GetChildHandles()
@@ -217,7 +217,7 @@ class Node:
                 return tuple(self.__generate_child(handle.item()) for handle in child_handles[:res])
             initial_size = res
 
-    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
+    @_cache.lru_cache_method(cache_manager=__node_cache_manager)
     def get_parent_node(self, path: Optional[str] = None) -> Self:
         """
         Binding of CAEN_FELib_GetParentHandle()
@@ -231,7 +231,7 @@ class Node:
         lib.get_parent_handle(self.handle, _utils.to_bytes_opt(path), value)
         return self.__generate_child(value.value)
 
-    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
+    @_cache.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node(self, path: Optional[str] = None) -> Self:
         """
         Binding of CAEN_FELib_GetHandle()
@@ -244,7 +244,7 @@ class Node:
         lib.get_handle(self.handle, _utils.to_bytes_opt(path), value)
         return self.__generate_child(value.value)
 
-    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
+    @_cache.lru_cache_method(cache_manager=__node_cache_manager)
     def get_path(self) -> str:
         """
         Binding of CAEN_FELib_GetPath()
@@ -257,7 +257,7 @@ class Node:
         lib.get_path(self.handle, value)
         return value.value.decode()
 
-    @_utils.lru_cache_method(cache_manager=__node_cache_manager)
+    @_cache.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node_properties(self, path: Optional[str] = None) -> tuple[str, NodeType]:
         """
         Binding of CAEN_FELib_GetNodeProperties()
