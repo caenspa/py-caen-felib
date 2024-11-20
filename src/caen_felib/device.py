@@ -214,7 +214,7 @@ class Node:
             child_handles_arg = child_handles.ctypes.data_as(ct.POINTER(ct.c_uint64))
             res = lib.get_child_handles(self.handle, b_path, child_handles_arg, initial_size)
             if res <= initial_size:
-                return tuple(type(self)(handle.item(), self.__root_node()) for handle in child_handles[:res])
+                return tuple(self.__generate_child(handle.item()) for handle in child_handles[:res])
             initial_size = res
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
@@ -229,7 +229,7 @@ class Node:
         """
         value = ct.c_uint64()
         lib.get_parent_handle(self.handle, _utils.to_bytes_opt(path), value)
-        return type(self)(value.value, self.__root_node())
+        return self.__generate_child(value.value)
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_node(self, path: Optional[str] = None) -> Self:
@@ -242,7 +242,7 @@ class Node:
         """
         value = ct.c_uint64()
         lib.get_handle(self.handle, _utils.to_bytes_opt(path), value)
-        return type(self)(value.value, self.__root_node())
+        return self.__generate_child(value.value)
 
     @_utils.lru_cache_method(cache_manager=__node_cache_manager)
     def get_path(self) -> str:
@@ -448,8 +448,9 @@ class Node:
 
     # Private utilities
 
-    def __root_node(self) -> Self:
-        return self if self.root_node is None else self.root_node
+    def __generate_child(self, handle: int) -> Self:
+        root_node = self if self.root_node is None else self.root_node
+        return type(self)(handle, root_node)
 
     # Python utilities
 
