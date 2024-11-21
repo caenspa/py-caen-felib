@@ -14,9 +14,8 @@ from typing import Any, Optional, overload
 
 class Lib:
     """
-    This class loads the shared library and
-    exposes its functions on its public attributes
-    using ctypes.
+    This class loads the shared library and exposes its functions on its
+    public attributes using ctypes.
     """
 
     def __init__(self, name: str) -> None:
@@ -50,12 +49,10 @@ class Lib:
             self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
         except FileNotFoundError as ex:
             raise RuntimeError(
-                f'Library {self.name} not found. '
-                'This module requires the latest version of '
-                'the library to be installed on your system. '
-                'You may find the official installers at '
-                'https://www.caen.it/. '
-                'Please install it and retry.'
+                f'Library {self.name} not found. This module requires '
+                'the latest version of the library to be installed on '
+                'your system. You may find the official installers at '
+                'https://www.caen.it/. Please install it and retry.'
             ) from ex
 
     @property
@@ -98,13 +95,9 @@ def to_bytes(path: str) -> bytes:
 
 
 @overload
-def to_bytes_opt(path: None) -> None:
-    ...
-
-
+def to_bytes_opt(path: None) -> None: ...
 @overload
-def to_bytes_opt(path: str) -> bytes:
-    ...
+def to_bytes_opt(path: str) -> bytes: ...
 
 
 def to_bytes_opt(path: Optional[str]) -> Optional[bytes]:

@@ -48,9 +48,9 @@ _type_map: dict[str, npt.DTypeLike] = {
 @dataclass
 class Data:
     """
-    Class representing data set by Node.set_read_data_format().
-    It holds a `numpy.ndarray` in value allocated with shape
-    specified in the data format.
+    Class representing data set by Node.set_read_data_format(). It holds
+    a `numpy.ndarray` in value allocated with shape specified in the
+    data format.
     """
     name: str  ## Field name
     type: str  ## Field type
@@ -76,7 +76,9 @@ class Data:
 
     @property
     def arg(self) -> Any:
-        """ctypes pointer to Data.value that is used within Node.read_data"""
+        """
+        ctypes pointer to Data.value that is used within Node.read_data
+        """
         return self.__arg
 
     def __generate_arg(self) -> Any:
@@ -177,9 +179,9 @@ class Node:
         """
         Binding of CAEN_FELib_Close()
 
-        This will also clear class cache to remove all references
-        to child nodes. It will impact also nodes of other digitizer,
-        but is required to allow garbage collection of unused nodes.
+        This will also clear class cache to remove all references to
+        child nodes. It will impact also nodes of other digitizer, but
+        is required to allow garbage collection of unused nodes.
 
         @exception					error.Error in case of error
         """
@@ -360,12 +362,14 @@ class Node:
         """
         Binding of CAEN_FELib_SetReadDataFormat()
 
-        In addition to what happens in C library, it also allocate data. Size of fields
-        with `dim > 0` must be specified by a `"shape"` entry in the field description,
-        that is a vector passed to the `shape` argument of `np.empty` constructor.
-        On fields with `dim == 0` the shape can be omitted, and is set to `[]` by default.
-        Fields can be accessed on data attribute of this class, that is a list of Data
-        inizialized with the field descriptions, in the same order of @p format.
+        In addition to what happens in C library, it also allocate data.
+        Size of fields with `dim > 0` must be specified by a `"shape"`
+        entry in the field description, that is a vector passed to the
+        `shape` argument of `np.empty` constructor. On fields with
+        `dim == 0` the shape can be omitted, and is set to `[]` by
+        default. Fields can be accessed on data attribute of this class,
+        that is a list of Data inizialized with the field descriptions,
+        in the same order of @p format.
 
         Example:
         ```
@@ -403,9 +407,10 @@ class Node:
         """
         Binding of CAEN_FELib_ReadData()
 
-        Unlike what happens in C library, variadic arguments are added automatically
-        according to what has been specified by set_read_data_format(). Data can be
-        retrieved using the data attribute of this class.
+        Unlike what happens in C library, variadic arguments are added
+        automatically according to what has been specified by
+        set_read_data_format(). Data can be retrieved using the data
+        attribute of this class.
 
         Example:
         ```

@@ -88,7 +88,7 @@ with device.connect(dig2_uri) as dig:
     # Configure plot
     plt.ion()
     figure, ax = plt.subplots(figsize=(10, 8))
-    lines = []
+    lines: list[plt.Line2D] = []
     for i in range(n_ch):
         line, = ax.plot([], [], drawstyle='steps-post')
         lines.append(line)
@@ -111,12 +111,11 @@ with device.connect(dig2_uri) as dig:
                 continue
             if ex.code is error.ErrorCode.STOP:
                 break
-            else:
-                raise ex
+            raise ex
 
         # Plot first 4 channels
         for i in range(n_ch):
-            valid_sample_range = np.arange(0, waveform_size[i])
+            valid_sample_range = np.arange(0, waveform_size[i], dtype=waveform_size[i].dtype)
             lines[i].set_data(valid_sample_range, waveform[i])
 
         ax.title.set_text(f'Timestamp: {timestamp}')

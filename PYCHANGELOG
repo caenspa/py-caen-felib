@@ -18,6 +18,9 @@ New features:
 - Dropped support for Python 3.8
 - Class `device._Data` made public as `device.Data`
 
+Fixes:
+- Fix DPP demo support for NumPy >= 2.0.
+
 
 v1.2.6 (18/11/2024)
 -------------------

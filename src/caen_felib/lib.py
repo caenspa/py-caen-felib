@@ -20,9 +20,8 @@ from caen_felib import error, _utils
 
 class _Lib(_utils.Lib):
     """
-    This class loads the CAEN_FELib shared library and
-    exposes its functions on its public attributes
-    using ctypes.
+    This class loads the CAEN_FELib shared library and exposes its
+    functions on its public attributes using ctypes.
     """
 
     APIType: TypeAlias = Callable[..., int]
