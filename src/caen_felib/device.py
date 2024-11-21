@@ -132,7 +132,7 @@ if sys.version_info >= (3, 11):
     # Trick to prevent users from trying to set node values using the
     # __setattr__ method instead of the value attribute. weakref_slot
     # is required by the cache manager.
-    dataclass_args = { 'slots': True,'weakref_slot': True }
+    dataclass_args = { 'slots': True, 'weakref_slot': True }
 else:
     dataclass_args = {}
 
