@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
+import sys
 from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
@@ -127,7 +128,16 @@ class NodeType(IntEnum):
     GROUP = 13
 
 
-@dataclass
+if sys.version_info >= (3, 11):
+    # Trick to prevent users from trying to set node values using the
+    # __setattr__ method instead of the value attribute. weakref_slot
+    # is required by the cache manager.
+    dataclass_args = { 'slots': True,'weakref_slot': True }
+else:
+    dataclass_args = {}
+
+
+@dataclass(**dataclass_args)
 class Node:
     """
     Class representing a node.
@@ -136,6 +146,9 @@ class Node:
     # Public members
     handle: int  ## Handle representing the node on the C library
     root_node: Optional[Self]  ## Root node, set to None on root node (stored to prevent g.c.)
+
+    # Private members
+    __opened: bool = field(init=False, repr=False)
 
     # Static private members
     __cache_manager: ClassVar[_cache.Manager] = _cache.Manager()

@@ -17,6 +17,9 @@ v1.3.0 (XX/XX/2024)
 New features:
 - Dropped support for Python 3.8
 - Class `device._Data` made public as `device.Data`
+- Add a trick to prevent users from trying to set node values using the
+    `__setattr__` method instead of the `value` attribute. Available only on
+    Python > 3.11.
 
 Fixes:
 - Fix DPP demo support for NumPy >= 2.0.
@@ -26,17 +29,16 @@ v1.2.6 (18/11/2024)
 -------------------
 
 New features:
-- Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2
-    package.
+- Add Dig2 DPP-PSD demo to example folder, copied from CAEN Dig2 package.
 - Add Dig1 demo to example folder, copied from CAEN Dig1 package.
 
 Changes:
-- dig1_types.HighPriorityFlagsPsd renamed to dig1_types.DppFlags.
+- `dig1_types.HighPriorityFlagsPsd` renamed to `dig1_types.DppFlags`.
 
 Fixes:
-- Classes inheriting enum.Flag now inherit enum.IntFlag to improve
-    the support of unknown flags. This applies to all the classes
-    on dig1_types and dig2_types.
+- Classes inheriting `enum.Flag` now inherit `enum.IntFlag` to improve the
+    support of unknown flags. This applies to all the classes on `dig1_types`
+    and `dig2_types`.
 - Fix changelog path on pypi.org.
 
 
@@ -65,11 +67,11 @@ New features:
 - New file types, that includes enumerators to help decoding
     DPP-PHA and DPP-PSD error flags and probe types from events,
     available in dig1_types and dig2_types submodules.
-- Tentative support of PTRDIFF_T data type.
+- Tentative support of `PTRDIFF_T` data type.
 
 Fixes:
 - Refactoring wrapper to binding, that is more appropriate.
-- Fix typing of set_read_data_format.
+- Fix typing of `set_read_data_format`.
 - Doc improved.
 
 
@@ -100,16 +102,16 @@ v1.1.0 (11/12/2023)
 -------------------
 
 New features:
-- Add support for CAEN_FELib_GetImplLibVersion
+- Add support for `CAEN_FELib_GetImplLibVersion`
 - Improved example in README, implementing an acquisition loop
-- ErrorCode now inherits from IntEnum to simplify conversion to integers
+- `ErrorCode` now inherits from `IntEnum` to simplify conversion to integers
 
 
 v1.0.5 (30/06/2023)
 -------------------
 
 Fixes:
-- Remove 'from __future__ import annotations' since Mypy supports
+- Remove `from __future__ import annotations` since Mypy supports
     Self (currently imported from typing_extensions) since 1.0
 - Documentation and packaging improved
 
