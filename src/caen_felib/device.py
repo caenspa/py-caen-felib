@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from functools import wraps
 from json import dumps, loads
-import sys
 from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
@@ -46,28 +45,32 @@ _type_map: dict[str, npt.DTypeLike] = {
 }
 
 
-@dataclass
+@dataclass(**_utils.dataclass_slots)
 class Data:
     """
     Class representing data set by Node.set_read_data_format(). It holds
     a `numpy.ndarray` in value allocated with shape specified in the
     data format.
     """
+
+    # Public members
     name: str  ## Field name
     type: str  ## Field type
     dim: int = field(default=0)  ## Field dimension
     shape: list[int] = field(default_factory=list)  ## Field shape
 
+    # Private members
+    __value: np.ndarray = field(init=False, repr=False)
+    __proxy_value_2d: Optional[np.ndarray] = field(default=None, repr=False)
+    __arg: Any = field(init=False, repr=False)
+
     def __post_init__(self) -> None:
         if self.dim > 2:
             raise ValueError('dim cannot be larger than 2')
-
         if self.dim != len(self.shape):
             raise ValueError('shape length must match dim')
-
         # Memory allocation
         self.__value = np.empty(self.shape, dtype=np.dtype(_type_map[self.type]))
-        self.__proxy_value_2d: Optional[np.ndarray] = None  # used when dim == 2
         self.__arg = self.__generate_arg()
 
     @property
@@ -128,16 +131,7 @@ class NodeType(IntEnum):
     GROUP = 13
 
 
-if sys.version_info >= (3, 11):
-    # Trick to prevent users from trying to set node values using the
-    # __setattr__ method instead of the value attribute. weakref_slot
-    # is required by the cache manager.
-    dataclass_args = { 'slots': True, 'weakref_slot': True }
-else:
-    dataclass_args = {}
-
-
-@dataclass(**dataclass_args)
+@dataclass(**_utils.dataclass_slots_weakref)
 class Node:
     """
     Class representing a node.
@@ -157,13 +151,8 @@ class Node:
         self.__opened = self.root_node is None
 
     def __del__(self) -> None:
-        if self.opened:
+        if self.__opened:
             self.close()
-
-    @property
-    def opened(self) -> bool:
-        """Set on instances that requires close() to be called"""
-        return self.__opened
 
     # C API bindings
 

@@ -103,3 +103,20 @@ def to_bytes_opt(path: str) -> bytes: ...
 def to_bytes_opt(path: Optional[str]) -> Optional[bytes]:
     """Convert string to bytes"""
     return None if path is None else to_bytes(path)
+
+
+# Slots brings some performance improvements and memory savings.
+# In caen_felib are also a trick to prevent users from trying to set
+# Node values using the `__setattr__` method instead of the value
+# attribute.
+if sys.version_info >= (3, 10):
+    dataclass_slots = {'slots': True}
+else:
+    dataclass_slots = {}
+
+
+# Weakref support is required by the cache manager.
+if sys.version_info >= (3, 11):
+    dataclass_slots_weakref = dataclass_slots | {'weakref_slot': True}
+else:
+    dataclass_slots_weakref = {}
