@@ -26,22 +26,22 @@ from caen_felib import lib, _cache, _utils
 # - numpy.typing.DTypeLike requires numpy >= 1.20
 
 
-_type_map: dict[str, npt.DTypeLike] = {
-    'U8': ct.c_uint8,
-    'U16': ct.c_uint16,
-    'U32': ct.c_uint32,
-    'U64': ct.c_uint64,
-    'I8': ct.c_int8,
-    'I16': ct.c_int16,
-    'I32': ct.c_int32,
-    'I64': ct.c_int64,
-    'CHAR': ct.c_char,
-    'BOOL': ct.c_bool,
-    'SIZE_T': ct.c_size_t,
-    'PTRDIFF_T': ct.c_ssize_t,  # not exactly the same, but should be fine at least on supported platforms
-    'FLOAT': ct.c_float,
-    'DOUBLE': ct.c_double,
-    'LONG DOUBLE': ct.c_longdouble,
+_DATA_TYPE_MAP: dict[str, npt.DTypeLike] = {
+    'U8':           ct.c_uint8,
+    'U16':          ct.c_uint16,
+    'U32':          ct.c_uint32,
+    'U64':          ct.c_uint64,
+    'I8':           ct.c_int8,
+    'I16':          ct.c_int16,
+    'I32':          ct.c_int32,
+    'I64':          ct.c_int64,
+    'CHAR':         ct.c_char,
+    'BOOL':         ct.c_bool,
+    'SIZE_T':       ct.c_size_t,
+    'PTRDIFF_T':    ct.c_ssize_t,  # not exactly the same, but should be fine at least on supported platforms
+    'FLOAT':        ct.c_float,
+    'DOUBLE':       ct.c_double,
+    'LONG DOUBLE':  ct.c_longdouble,
 }
 
 
@@ -56,8 +56,8 @@ class Data:
     # Public members
     name: str  ## Field name
     type: str  ## Field type
-    dim: int = field(default=0)  ## Field dimension
-    shape: list[int] = field(default_factory=list)  ## Field shape
+    dim: int = field(default=0, repr=False)  ## Field dimension
+    shape: list[int] = field(default_factory=list, repr=False)  ## Field shape
 
     # Private members
     __value: np.ndarray = field(init=False, repr=False)
@@ -69,8 +69,11 @@ class Data:
             raise ValueError('dim cannot be larger than 2')
         if self.dim != len(self.shape):
             raise ValueError('shape length must match dim')
+        dtype = _DATA_TYPE_MAP.get(self.type)
+        if dtype is None:
+            raise ValueError('Invalid data type')
         # Memory allocation
-        self.__value = np.empty(self.shape, dtype=np.dtype(_type_map[self.type]))
+        self.__value = np.empty(self.shape, dtype=dtype)
         self.__arg = self.__generate_arg()
 
     @property
@@ -101,9 +104,6 @@ class Data:
         # value.ctypes is equivalent to value.ctypes.data_as(ctypes.c_void_p),
         # that is fine for us.
         return value.ctypes
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.name}, {self.type})'
 
     def __str__(self) -> str:
         return self.name
@@ -528,6 +528,7 @@ class Node:
         return hash(self.handle)
 
     def __repr__(self) -> str:
+        """Override default dataclass representation"""
         return f'{self.__class__.__name__}({self.path})'
 
     def __str__(self) -> str:

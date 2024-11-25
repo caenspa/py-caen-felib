@@ -19,7 +19,7 @@ New features:
 - Class `device._Data` made public as `device.Data`
 - Add a trick to prevent users from trying to set node values using the
     `__setattr__` method instead of the `value` attribute. Available only on
-    Python > 3.11.
+    Python >= 3.11.
 
 Fixes:
 - Fix DPP demo support for NumPy >= 2.0.
