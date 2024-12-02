@@ -40,12 +40,11 @@ class Lib:
             loader_variadic = ct.cdll
             path = f'lib{self.name}.so'
 
-        ## Library path on the filesystem
         self.__path = path
 
         # Load library
         try:
-            self.__lib = loader.LoadLibrary(path)
+            self.__lib = loader.LoadLibrary(self.path)
             self.__lib_variadic = loader_variadic.LoadLibrary(self.path)
         except FileNotFoundError as ex:
             raise RuntimeError(
