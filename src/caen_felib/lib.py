@@ -8,8 +8,8 @@ __license__ = 'LGPL-3.0-or-later'
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 import ctypes as ct
+from collections.abc import Callable
 from json import loads
-from typing import Callable, Dict, Tuple, Type
 from typing_extensions import TypeAlias
 
 from caen_felib import error, _utils
@@ -20,9 +20,8 @@ from caen_felib import error, _utils
 
 class _Lib(_utils.Lib):
     """
-    This class loads the CAEN_FELib shared library and
-    exposes its functions on its public attributes
-    using ctypes.
+    This class loads the CAEN_FELib shared library and exposes its
+    functions on its public attributes using ctypes.
     """
 
     APIType: TypeAlias = Callable[..., int]
@@ -73,13 +72,13 @@ class _Lib(_utils.Lib):
         #     https://stackoverflow.com/q/74630617/3287591
         self.read_data = self.__get('ReadData', ct.c_uint64, ct.c_int, variadic=True)
 
-    def __api_errcheck(self, res: int, func: Callable, _: Tuple) -> int:
+    def __api_errcheck(self, res: int, func: Callable, _: tuple) -> int:
         # res can be positive on GetChildHandles and GetDeviceTree
         if res < 0:
             raise error.Error(self.last_error, res, func.__name__)
         return res
 
-    def __get(self, name: str, *args: Type, **kwargs) -> Callable[..., int]:
+    def __get(self, name: str, *args: type, **kwargs) -> Callable[..., int]:
         min_version = kwargs.get('min_version')
         if min_version is not None:
             # This feature requires __get_lib_version to be already defined
@@ -95,13 +94,13 @@ class _Lib(_utils.Lib):
         func.errcheck = self.__api_errcheck
         return func
 
-    def __ver_at_least(self, target: Tuple[int, ...]) -> bool:
+    def __ver_at_least(self, target: tuple[int, ...]) -> bool:
         ver = self.get_lib_version()
         return _utils.version_to_tuple(ver) >= target
 
     # C API bindings
 
-    def get_lib_info(self, initial_size: int = 2**22) -> Dict:
+    def get_lib_info(self, initial_size: int = 2**22) -> dict:
         """
         Binding of CAEN_FELib_GetLibInfo()
 
@@ -167,7 +166,7 @@ class _Lib(_utils.Lib):
     # Python utilities
 
     @property
-    def info(self) -> Dict:
+    def info(self) -> dict:
         """Get library info"""
         return self.get_lib_info()
 

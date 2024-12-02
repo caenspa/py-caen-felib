@@ -35,8 +35,7 @@ class ErrorCode(IntEnum):
 
 class Error(RuntimeError):
     """
-    Raised when a wrapped C API function returns
-    negative values.
+    Raised when a wrapped C API function returns negative values.
     """
 
     code: ErrorCode
